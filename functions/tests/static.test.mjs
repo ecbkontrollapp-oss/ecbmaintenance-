@@ -40,17 +40,17 @@ test('temporary password is generated only on the server',()=>{
  assert.match(browser,/ecb-admin-temp-password/);
  assert.doesNotMatch(browser,/createUserWithEmailAndPassword|randomBytes\(/);
 });
-test('automatic mail uses one fixed recipient, manual mail requires staff',()=>{
- assert.match(server,/const DESTINATION='pb@ecb-system\.de'/);
- assert.match(server,/export const onNewMaintenance=onDocumentCreated/);
- assert.match(server,/export const onNewLegacyMaintenance=onDocumentCreated/);
- assert.match(server,/export const sendProtocolEmail=onCall/);
- assert.match(server,/automatic:false/);
- assert.match(server,/automatic:true/);
- assert.match(server,/retry:false/);
- assert.match(server,/ecb_mail_jobs/);
- assert.match(server,/db\.runTransaction/);
- assert.match(server,/SMTP_SECRET/);
+test('free Cloudflare mail has one fixed automatic recipient and no Firebase SMTP triggers',()=>{
+ const free=readFileSync(new URL('../../free-mail-worker/src/index.js',import.meta.url),'utf8');
+ const client=readFileSync(new URL('../../features/free-mail-client.mjs',import.meta.url),'utf8');
+ assert.match(free,/automatic\?'pb@ecb-system\.de'/);
+ assert.match(free,/const MAIL='https:\/\/api\.resend\.com\/emails'/);
+ assert.match(free,/Idempotency-Key/);
+ assert.match(free,/mail_jobs/);
+ assert.match(free,/ecbStaff/);
+ assert.match(client,/async send\(\{mode,protocol/);
+ assert.match(web,/mode:'automatic'/);
+ assert.doesNotMatch(server,/onDocumentCreated|nodemailer|sendProtocolEmail=onCall/);
 });
 test('PDF rejects missing image and missing signature instead of claiming success',()=>{
  assert.match(pdf,/async function embedImage\(/);
