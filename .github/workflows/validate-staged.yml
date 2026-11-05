@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - sichere-anmeldung-und-altprotokolle-2026-11-05
+      - feature-admin-users-mail-2026-11-05
   pull_request:
     branches:
       - main
@@ -31,3 +32,12 @@ jobs:
           node --check admin/ecb-admin.mjs
       - name: Check JavaScript and synthetic historical Firestore data
         run: node --test tools/test-staged.mjs
+
+      - name: Parse Firebase privileged functions without running or deploying
+        run: |
+          node --check functions/index.js
+          node --check functions/pdf.mjs
+          node --check functions/tests/static.test.mjs
+          node --check tools/bootstrap-admin.mjs
+      - name: Verify admin claims, password change, full PDF mail and no unapproved writes
+        run: node --test functions/tests/*.test.mjs
