@@ -80,7 +80,7 @@ body:not(.ecb-locked) #auth-panel{display:none!important}
   <div class="brand" style="padding:0 0 20px"><div class="logo-plate original-logo-plate" style="width:74px;height:74px"><img data-ecb-logo alt="ECB Reinigungssysteme Firmenlogo" /></div><div><strong style="font-size:18px;color:#25402c;line-height:1.25;display:block">ECB Wartungssystem</strong><small style="font-size:12px;color:#688365">E.C.B. Reinigungssysteme GmbH</small></div></div>
   <div class="eyebrow">Willkommen zurück</div>
   <h2 style="margin:7px 0 6px">Anmelden</h2>
-  <p style="color:#6a7d71;margin-bottom:22px">Melde dich wie bisher mit deinem Benutzernamen und Passwort an. Die Cloud verbindet sich danach automatisch.</p>
+  <p style="color:#6a7d71;margin-bottom:22px">Melde dich mit deinem Benutzernamen und einem bereits für Firebase Authentication eingerichteten Passwort an. Alte App-Konten müssen einmalig sicher übernommen werden; erst danach lädt die Cloud automatisch.</p>
   <form id="auth-form" autocomplete="on">
     <div class="field-grid">
       <div class="field"><label for="login-user">Benutzername</label><input type="text" id="login-user" autocomplete="username" required placeholder="Benutzername" spellcheck="false"></div>
@@ -543,7 +543,10 @@ function redrawProtocols(){
      sessionStorage.setItem('ecb_current_user',String(username).trim());
      sessionStorage.setItem('ecb_current_fullname',response.user.displayName||String(username).trim());
    }catch(e){
-     if(String(e?.code||'').includes('auth/'))throw new Error('Benutzername oder Passwort nicht erkannt. Falls dein altes Konto noch nicht übernommen wurde, ist die Migration erforderlich.');
+     if(e?.code==='auth/operation-not-allowed')throw new Error('Firebase Authentication: Die Anmeldemethode E-Mail/Passwort ist noch nicht freigeschaltet. Bitte im Firebase-Projekt ecb-maintenance aktivieren.');
+     if(e?.code==='auth/too-many-requests')throw new Error('Zu viele Anmeldeversuche. Bitte den Zugang in Firebase prüfen und später erneut anmelden.');
+     if(['auth/invalid-credential','auth/user-not-found','auth/wrong-password','auth/invalid-login-credentials'].includes(e?.code))throw new Error('Dieser Benutzer ist noch nicht als Firebase-Authentication-Konto angelegt oder das neue Passwort stimmt nicht. Der bisherige App-Login wurde nicht automatisch übernommen.');
+     if(String(e?.code||'').startsWith('auth/'))throw new Error('Firebase-Anmeldung fehlgeschlagen ('+e.code+'). Bitte Konto und Authentifizierungs-Einstellungen prüfen.');
      throw e;
    }
  };
