@@ -45,3 +45,9 @@ jobs:
           node --check tools/bootstrap-admin.mjs
       - name: Verify admin claims, password change, full PDF mail and no unapproved writes
         run: node --test functions/tests/*.test.mjs
+
+      - name: Validate free email Worker without paid services
+        run: |
+          node --check free-mail-worker/src/index.js
+          node --check features/free-mail-client.mjs
+          node --test free-mail-worker/tests/*.test.mjs
