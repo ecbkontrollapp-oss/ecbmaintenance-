@@ -85,16 +85,16 @@ test('separate public preview reads Firebase only after login and exposes no wri
   assert.ok(preview.includes("signInWithEmailAndPassword(auth,email,password)"));
   assert.ok(preview.includes("listen(protocolSources,protocolBySource,redrawProtocols)"));
   assert.ok(preview.includes('window.ECB_SAVE=null; // Read-only test'));
-  assert.doesNotMatch(preview,/\\b(?:setDoc|deleteDoc|addDoc|updateDoc|uploadBytes)\\s*\\(/);
-  assert.doesNotMatch(preview,/import\\s*\\{[^}]*\\b(?:setDoc|deleteDoc|addDoc|updateDoc|uploadBytes)\\b/);
+  assert.doesNotMatch(preview,/\b(?:setDoc|deleteDoc|addDoc|updateDoc|uploadBytes)\s*\(/);
+  assert.doesNotMatch(preview,/import\s*\{[^}]*\b(?:setDoc|deleteDoc|addDoc|updateDoc|uploadBytes)\b/);
   assert.ok(preview.includes('id="login-pass"'));
   assert.ok(preview.includes("button.disabled=true"));
-  const scripts=[...preview.matchAll(/<script\\b([^>]*)>([\\s\\S]*?)<\\/script>/g)];
+  const scripts=[...preview.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
   assert.ok(scripts.length>=4);
   for(const [,attrs,script] of scripts){
     let js=script.trim();
     if(!js)continue;
-    if(attrs.includes('type="module"'))js=js.replace(/^\\s*import\\b[^\\n]*\\n/gm,'');
+    if(attrs.includes('type="module"'))js=js.replace(/^\s*import\b[^\n]*\n/gm,'');
     new vm.Script(js);
   }
 });
