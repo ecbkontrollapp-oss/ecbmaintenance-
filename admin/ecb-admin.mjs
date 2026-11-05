@@ -131,8 +131,12 @@ $('history-body')?.addEventListener('click',async event=>{
      const id=crypto.randomUUID();
      if(mailInFlight.has(p.id))return;mailInFlight.add(p.id);
      try{
-       const result=await request('sendProtocolEmail',{protocolId:p.id,recipient:to,requestId:id});
-       alert(result.ok?'E-Mail erfolgreich vom Mailserver angenommen.':'Versand wurde bereits angefordert. Kein Doppelversand.');
+       if(!window.ECB_FREE_MAIL)throw Error('Kostenloser Maildienst nicht geladen.');
+       const result=await window.ECB_FREE_MAIL.send({
+         mode:'manual',protocol:p,sourcePath:p.__firestorePath,
+         recipient:to,requestId:id
+       });
+       alert(result.ok?'E-Mail vom kostenlosen Dienst angenommen.':'Ein Versandauftrag wurde bereits erfasst. Kein Doppelversand.');
      }finally{mailInFlight.delete(p.id);}
    }else{
      if(window.ECB_ADMIN_ROLE!=='admin')throw Error('Nur Administratoren dürfen Protokolle archivieren.');
