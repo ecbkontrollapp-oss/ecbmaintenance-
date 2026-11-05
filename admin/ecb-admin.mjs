@@ -7,7 +7,7 @@ import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/10.
 
 const app=getApp(),auth=getAuth(app),db=getFirestore(app),funcs=getFunctions(app,'europe-west3');
 const $=id=>document.getElementById(id);
-const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;','"':'&quot;'}[c]));
+const safe=value=>String(value??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 const request=async(name,data={})=>(await httpsCallable(funcs,name,{timeout:90000})(data)).data;
 const explain=e=>{
   if(String(e?.code||'').includes('not-found'))return 'Der ECB-Serverdienst wurde noch nicht freigeschaltet. Bitte erst die geprüften Firebase Functions bereitstellen.';
