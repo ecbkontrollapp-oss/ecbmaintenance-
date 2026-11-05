@@ -39,10 +39,24 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
 #report-content .report-sign{width:100%;max-width:420px;max-height:145px;object-fit:contain;background:white;border:1px solid #dfe9da;padding:7px;border-radius:10px}
 #report-content .report-photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
 @media(max-width:650px){#report-content .report-photos{grid-template-columns:1fr}}
+
+/* Original ECB-style username/password entry, no Firebase-specific UI. */
+body.ecb-locked{background:radial-gradient(circle at 15% 10%,#e9f4e1 0,transparent 37%),linear-gradient(135deg,#f7faf5 0%,#edf5eb 100%)}
+body.ecb-locked .layout{display:block;min-height:100vh}
+body.ecb-locked .sidebar,body.ecb-locked .topbar,body.ecb-locked .view,body.ecb-locked #cloud-message,body.ecb-locked #auth-identity,body.ecb-locked .footer-note{display:none!important}
+body.ecb-locked .content{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:28px 15px}
+#auth-panel{max-width:510px;margin:0 auto 23px;padding:32px!important;border:1px solid #d4e5cd!important;background:linear-gradient(150deg,#fff,#f4faef)!important;box-shadow:0 20px 55px rgba(33,63,31,.1)}
+body.ecb-locked #auth-panel{display:block!important;width:100%;margin:0}
+body:not(.ecb-locked) #auth-panel{display:none!important}
+#auth-panel .field-grid{grid-template-columns:1fr}
+#auth-panel .field label{font-size:13px}
+#auth-panel .field input{font-size:16px;min-height:49px}
+#auth-submit{width:100%;min-height:50px;font-size:14px}
+@media(max-width:730px){body.ecb-locked .content{padding:17px}#auth-panel{padding:23px!important}}
 </style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js" crossorigin="anonymous"></script>
 </head>
-<body>
+<body class="ecb-locked">
 <div class="layout">
  <aside class="sidebar">
   <div class="brand"><div class="logo-plate original-logo-plate"><img data-ecb-logo alt="Original ECB Firmenlogo" /></div><div><strong>ECB<br>Reinigungssysteme</strong><small>Digitales Wartungssystem</small></div></div>
@@ -53,16 +67,26 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
    <button class="nav-btn" data-page="dguv"><span class="ico">♧</span> DGUV V3 <span class="num" id="side-dguv-count">–</span></button>
    <button class="nav-btn" data-page="history"><span class="ico">▣</span> Protokolle <span class="num" id="side-history-count">–</span></button>
   </nav></div>
-  <div class="side-bottom"><div class="cloud-state"><span class="pulse"></span><div><b id="sync-label">Firebase: wird verbunden</b><span id="sync-detail">Geschützte Anmeldung erforderlich</span></div></div><div class="profile"><div class="avatar">EC</div><div><b>ECB Wartung</b><small>Wartung & Prüfung</small></div></div></div>
+  <div class="side-bottom"><div class="cloud-state"><span class="pulse"></span><div><b id="sync-label">Cloud wird verbunden</b><span id="sync-detail">Benutzeranmeldung erforderlich</span></div></div><div class="profile"><div class="avatar">EC</div><div><b>ECB Wartung</b><small>Wartung & Prüfung</small></div></div></div>
  </aside>
- <div class="app-main"><header class="topbar"><div class="mobile-brand"><div class="logo-plate original-logo-plate"><img data-ecb-logo alt="Original ECB Firmenlogo" /></div><strong>ECB Wartung</strong></div><div class="breadcrumb">ECB Reinigungssysteme <span>›</span> <strong id="breadcrumb-current">Übersicht</strong></div><div class="top-right"><span class="datetime" id="today-label"></span><span class="cloud-badge" id="cloud-pill">Anmeldung erforderlich</span><span class="top-icon" aria-label="Benachrichtigungen">♧</span><span class="user-avatar">EC</span></div></header>
- <main class="content"><section id="auth-panel" class="panel" style="max-width:640px;margin:0 auto 23px;padding:27px;border:1px solid #d4e5cd;background:linear-gradient(145deg,#fff,#f4faef)">
- <div class="eyebrow">Geschützter Zugriff</div><h2 style="margin:7px 0 5px">Mit Firebase anmelden</h2>
- <p style="color:#6a7d71;margin-bottom:18px">Aus Datenschutzgründen werden Protokolle, Dokumentationsfotos und Unterschriften erst nach einer bestätigten Firebase-Anmeldung geladen.</p>
- <form id="auth-form" autocomplete="on"><div class="field-grid"><div class="field"><label for="firebase-email">E-Mail</label><input type="email" id="firebase-email" autocomplete="username" required placeholder="E-Mail-Adresse"></div><div class="field"><label for="firebase-password">Passwort</label><input type="password" id="firebase-password" autocomplete="current-password" required placeholder="Firebase-Passwort"></div></div>
- <button class="button primary" style="margin-top:16px" id="auth-submit" type="submit">Anmelden</button><span class="muted" id="auth-feedback" style="display:block;margin-top:12px" role="status">Alte lokal gespeicherte App-Passwörter sind keine Firebase-Anmeldedaten.</span></form></section>
- <div id="auth-identity" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:13px"><span class="muted" id="auth-email"></span><button class="button subtle" id="auth-logout" type="button">Abmelden</button></div>
- <div class="notice" id="cloud-message" role="status"><span>ⓘ</span><span id="cloud-message-text">Anmeldung erforderlich: Die Originaldaten werden nach erfolgreicher Authentifizierung synchronisiert.</span></div>
+ <div class="app-main"><header class="topbar"><div class="mobile-brand"><div class="logo-plate original-logo-plate"><img data-ecb-logo alt="Original ECB Firmenlogo" /></div><strong>ECB Wartung</strong></div><div class="breadcrumb">ECB Reinigungssysteme <span>›</span> <strong id="breadcrumb-current">Übersicht</strong></div><div class="top-right"><span class="datetime" id="today-label"></span><span class="cloud-badge" id="cloud-pill">Cloud getrennt</span><span class="top-icon" aria-label="Benachrichtigungen">♧</span><span class="user-avatar">EC</span></div></header>
+ <main class="content"><section id="auth-panel" class="panel" aria-label="ECB Anmeldung">
+  <div class="brand" style="padding:0 0 20px"><div class="logo-plate original-logo-plate" style="width:74px;height:74px"><img data-ecb-logo alt="ECB Reinigungssysteme Firmenlogo" /></div><div><strong style="font-size:18px;color:#25402c;line-height:1.25;display:block">ECB Wartungssystem</strong><small style="font-size:12px;color:#688365">E.C.B. Reinigungssysteme GmbH</small></div></div>
+  <div class="eyebrow">Willkommen zurück</div>
+  <h2 style="margin:7px 0 6px">Anmelden</h2>
+  <p style="color:#6a7d71;margin-bottom:22px">Melde dich wie bisher mit deinem Benutzernamen und Passwort an. Die Cloud verbindet sich danach automatisch.</p>
+  <form id="auth-form" autocomplete="on">
+    <div class="field-grid">
+      <div class="field"><label for="login-user">Benutzername</label><input type="text" id="login-user" autocomplete="username" required placeholder="Benutzername" spellcheck="false"></div>
+      <div class="field"><label for="login-pass">Passwort</label><input type="password" id="login-pass" autocomplete="current-password" required placeholder="Passwort"></div>
+    </div>
+    <button class="button primary" id="auth-submit" style="margin-top:20px" type="submit">Anmelden</button>
+    <span class="muted" id="auth-feedback" style="display:block;margin-top:13px" role="status" aria-live="polite"></span>
+  </form>
+  <p class="muted" style="border-top:1px solid #dcebd9;padding-top:16px;margin-top:25px">Deine alten Protokolle und Dokumente bleiben in der bisherigen Cloud gespeichert.</p>
+</section>
+<div id="auth-identity" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:13px"><span class="muted" id="auth-email"></span><button class="button subtle" id="auth-logout" type="button">Abmelden</button></div>
+<div class="notice" id="cloud-message" role="status"><span>ⓘ</span><span id="cloud-message-text">Verbindung zur Cloud wird hergestellt.</span></div>
  <section id="view-dashboard" class="view active"><div class="hero"><div><div class="eyebrow">Wartung & Qualitätssicherung</div><h1>Wartungsübersicht</h1><p>Alle Anlagen, anstehenden Prüfungen und Wartungsprotokolle übersichtlich an einem Ort.</p></div><button class="button primary" data-action="new">＋ Neue Wartung</button></div>
  <div class="metric-grid"><div class="metric"><div class="metric-top">Anlagen im System <span class="metric-icon">⚙</span></div><strong>10</strong><small>8 Maschinen · 2 Kompressorprüfungen</small></div><div class="metric"><div class="metric-top">Wartungen fällig <span class="metric-icon" style="background:#fff3de;color:#bd8529">◷</span></div><strong id="metric-due">–</strong><small id="metric-due-note">Fälligkeit aus Wartungsverlauf</small></div><div class="metric"><div class="metric-top">DGUV Prüfgeräte <span class="metric-icon" style="background:#e7f2f7;color:#387e98">♧</span></div><strong id="metric-dguv">–</strong><small>Bestand aus Firebase</small></div><div class="metric"><div class="metric-top">Gespeicherte Protokolle <span class="metric-icon">▣</span></div><strong id="metric-proto">–</strong><small class="good">Aus der originalen Cloud-Historie</small></div></div>
  <div class="section-head"><div><h2>Wartungsbereiche</h2><p>Wähle eine Anlage und beginne direkt die Kontrolle.</p></div><button class="link" data-page="calendar">Alle Termine ansehen ↗</button></div>
@@ -118,7 +142,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
  <section id="view-calendar" class="view"><div class="hero"><div><div class="eyebrow">Termine und Intervalle</div><h1>Wartungskalender</h1><p>Fälligkeiten aus den tatsächlich gespeicherten Wartungen. Fehlende Daten werden ausdrücklich gekennzeichnet.</p></div><button class="button primary" data-action="new">＋ Wartung erfassen</button></div><div class="calendar-grid" id="calendar-cards"></div></section>
  <section id="view-retro" class="view"><div class="hero"><div><div class="eyebrow">Nachträgliche Dokumentation</div><h1>Wartung nachtragen</h1><p>Historische Arbeiten mit originalem Datum, Uhrzeit und zuständigem Techniker erfassen.</p></div></div><div class="panel form-panel"><div class="field-grid"><div class="field"><label for="retro-type">Anlage / Wartungsart</label><select id="retro-type"><option value="wash">Milnor Waschmaschine</option><option value="dry">Trockner</option><option value="comp">Kompressor 2-Wochen</option><option value="annual">Kompressor umfangreiche Wartung</option></select></div><div class="field"><label for="retro-machine">Maschine</label><select id="retro-machine"><option>1</option><option>2</option><option>3</option><option>4</option></select></div><div class="field"><label for="retro-date">Durchführungsdatum</label><input type="date" id="retro-date" value="2026-11-04"></div><div class="field"><label for="retro-time">Uhrzeit</label><input type="time" id="retro-time" value="08:00"></div><div class="field" style="grid-column:1/-1"><label for="retro-name">Techniker</label><input id="retro-name" placeholder="Name eingeben"></div></div><div style="margin-top:20px"><button class="button primary" id="retro-next">Prüfpunkte öffnen →</button></div></div></section>
  <section id="view-dguv" class="view"><div class="hero"><div><div class="eyebrow">Prüfmanagement</div><h1>DGUV V3 Prüfungen</h1><p>Gerätebestand, Prüffälligkeiten und zugehörige Messprotokolle – übersichtlich dokumentiert.</p></div><button class="button subtle" data-action="dguv">Gerätebestand ansehen</button></div><div class="metric-grid" style="margin-bottom:20px"><div class="metric"><div class="metric-top">Erfasste Geräte</div><strong id="dguv-total">–</strong></div><div class="metric"><div class="metric-top">Geprüft</div><strong id="dguv-completed">–</strong></div><div class="metric"><div class="metric-top">Bald fällig</div><strong id="dguv-due">–</strong></div><div class="metric"><div class="metric-top">Dokumente</div><strong id="dguv-attachments">–</strong></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Gerät</th><th>Inventarnr.</th><th>Standort</th><th>Fällig</th><th>Status</th><th>Aktion</th></tr></thead><tbody id="dguv-body"></tbody></table></div></section>
- <section id="view-history" class="view"><div class="hero"><div><div class="eyebrow">Archiv und Dokumentation</div><h1>Gespeicherte Protokolle</h1><p>Alle Wartungsnachweise inklusive Checklisten, Fotos und Unterschriften im Blick.</p></div><button class="button subtle" id="cloud-backup" title="Freigabe nach Prüfung der Firebase-Zugriffsregeln" disabled>Cloud-Sicherung nach Sicherheitsprüfung</button></div><div class="toolbar"><input class="search" id="history-search" placeholder="⌕  Protokoll, Anlage oder Techniker suchen ..."><select class="select" id="history-filter"><option value="all">Alle Kategorien</option><option value="Waschmaschine">Waschmaschinen</option><option value="Trockner">Trockner</option><option value="Kompressor">Kompressoren</option></select><button class="button subtle" id="reset-filter">Zurücksetzen</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Protokoll</th><th>Maschine</th><th>Datum</th><th>Techniker</th><th>Ergebnis</th><th>Aktion</th></tr></thead><tbody id="history-body"></tbody></table></div><p class="muted" style="margin-top:15px">Die bisherigen echten Protokolle werden hier im Entwurf bewusst nicht angezeigt oder bearbeitet.</p></section>
+ <section id="view-history" class="view"><div class="hero"><div><div class="eyebrow">Archiv und Dokumentation</div><h1>Gespeicherte Protokolle</h1><p>Alle Wartungsnachweise inklusive Checklisten, Fotos und Unterschriften im Blick.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="button subtle" id="cloud-sources">Datenquellen prüfen</button><button class="button subtle" id="cloud-backup" title="Freigabe nach Prüfung der Firebase-Zugriffsregeln" disabled>Cloud-Sicherung nach Sicherheitsprüfung</button></div></div><div class="toolbar"><input class="search" id="history-search" placeholder="⌕  Protokoll, Anlage oder Techniker suchen ..."><select class="select" id="history-filter"><option value="all">Alle Kategorien</option><option value="Waschmaschine">Waschmaschinen</option><option value="Trockner">Trockner</option><option value="Kompressor">Kompressoren</option></select><button class="button subtle" id="reset-filter">Zurücksetzen</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Protokoll</th><th>Maschine</th><th>Datum</th><th>Techniker</th><th>Ergebnis</th><th>Aktion</th></tr></thead><tbody id="history-body"></tbody></table></div><p class="muted" style="margin-top:15px">Historische Protokolle werden aus den verfügbaren Firebase-Sammlungen zusammengeführt. Bei fehlenden Berechtigungen wird der Bestand als unvollständig gekennzeichnet.</p></section>
  <section id="view-form" class="view"><div class="hero"><div><div class="eyebrow">Digitale Wartung</div><h1 id="form-title">Wartungsprotokoll</h1><p>Prüfpunkte, Fotos und Unterschrift werden zusammen als Protokoll gespeichert. Speichern ist erst bei bestätigter Cloud-Verbindung möglich.</p></div><button class="button subtle" data-page="dashboard">← Übersicht</button></div><div class="form-machine-banner" id="form-machine-banner"><img id="form-machine-photo" alt="Originalaufnahme der Maschine"><div><span>ECB SERVICE</span><strong id="form-machine-photo-title">Digitale Wartung</strong></div></div><div class="panel form-panel"><div class="field-grid"><div class="field"><label for="form-machine">Anlage</label><select id="form-machine"></select></div><div class="field"><label for="form-name">Techniker</label><input id="form-name" placeholder="Name des Technikers"></div><div class="field"><label for="form-runtime">Betriebsstunden (optional)</label><input id="form-runtime" type="text" inputmode="decimal" placeholder="Aktueller Betriebsstundenzähler"></div></div><h3 style="margin:23px 0 5px">Prüf- und Wartungspunkte</h3><p class="muted" style="margin:0 0 8px">Bitte je Prüfpunkt OK oder Mangel auswählen.</p><div id="checklist"></div><div class="field" style="margin-top:18px"><label for="form-notes">Bemerkungen</label><textarea id="form-notes" placeholder="Feststellungen und zusätzliche Hinweise"></textarea></div><div class="field" style="margin-top:15px"><label for="cloud-photo">Dokumentationsfotos (werden im Originalprotokoll gespeichert)</label><input id="cloud-photo" type="file" accept="image/*" multiple></div><div id="photo-names" class="muted" style="margin-top:6px"></div><div class="field" style="margin-top:15px"><label>Unterschrift</label><canvas id="signature" width="730" height="170" aria-label="Hier mit dem Finger unterschreiben" style="touch-action:none !important;-ms-touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;display:block;width:100%;height:170px;border:2px solid #b5d399;border-radius:13px;background:#fff;cursor:crosshair"></canvas><small style="color:#54813b;font-size:11px">Mit dem Finger im weißen Feld unterschreiben. Die Seite bleibt dabei stehen.</small><button class="link" id="clear-sign" style="align-self:flex-end">Unterschrift löschen</button></div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px"><button class="button primary" id="save-protocol">✓ Protokoll in Firebase speichern</button><button class="button subtle" data-page="dashboard">Abbrechen</button></div></div></section>
  <section id="view-preview" class="view"><div class="hero"><div><div class="eyebrow">Protokollvorschau</div><h1>Digitales Wartungsprotokoll</h1><p>ECB-Protokoll mit Prüfpunkten, Fotos und Unterschrift – direkt aus der Cloud.</p></div><button class="button subtle" data-page="history">← Archiv</button></div><div class="panel form-panel" id="report-content"></div><div style="margin-top:16px"><button class="button primary" id="print-report">PDF mit Bildern und Unterschrift herunterladen</button></div></section>
  <div class="footer-note">© E.C.B. Reinigungssysteme GmbH · Digitales Wartungssystem</div>
@@ -156,7 +180,7 @@ function normalizeProtocol(id,data){
   p.photos=Array.isArray(p.photos)?p.photos:[];
   p.points=Array.isArray(p.points)?p.points:[];
   p.date=humanDate(p.date||p.timestamp);
-  p.result=p.points.some(x=>!['OK','i.O.','Erledigt','Bestanden'].includes(String(x.status||'').trim()))?'Mangel':'OK';
+  p.result=p.points.some(x=>!['ok','i.o.','erledigt','bestanden','in ordnung','ja','✓','✔'].includes(String(x.status||'').trim().toLowerCase()))?'Mangel':'OK';
   return p;
 }
 function humanDate(v){
@@ -167,11 +191,12 @@ function humanDate(v){
   let d=new Date(v);return isNaN(d.getTime())?String(v):d.toLocaleDateString('de-DE');
 }
 function dateValue(p){
-  if(p.timestamp&&typeof p.timestamp.toDate==='function')return p.timestamp.toDate().getTime();
-  if(p.timestamp?.seconds)return p.timestamp.seconds*1000;
-  const d=String(p.date||''); const m=d.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-  if(m)return new Date(Number(m[3]),Number(m[2])-1,Number(m[1])).getTime();
-  const n=Date.parse(d);return Number.isFinite(n)?n:0;
+ if(p.timestamp&&typeof p.timestamp.toDate==='function')return p.timestamp.toDate().getTime();
+ if(p.timestamp?.seconds)return p.timestamp.seconds*1000;
+ const d=String(p.date||'').trim();
+ const m=d.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s*,?\s*(\d{1,2}):(\d{2}))?/);
+ if(m)return new Date(Number(m[3]),Number(m[2])-1,Number(m[1]),Number(m[4]||0),Number(m[5]||0)).getTime();
+ const n=Date.parse(d);return Number.isFinite(n)?n:0;
 }
 function keyFor(p){
   const x=(p.machine+' '+p.category+' '+(p.type||'')).toLowerCase();
@@ -212,7 +237,7 @@ function renderCalendar(){
 }
 function normalizeDguv(id,x){return {id,raw:x,name:x.name||x.deviceName||x.bezeichnung||x.device||'Unbenanntes Gerät',inventory:x.inventoryNumber||x.serialNumber||x.inventarNr||x.inventarnummer||'–',location:x.location||x.standort||'–',due:humanDate(x.nextDue||x.nextInspection||x.dueDate||x.nextDate||x.naechstePruefung),status:x.status||'Gespeichert'};}
 function renderDguv(){
- document.getElementById('dguv-body').innerHTML=!cloudDguvReady?'<tr><td colspan="6">Firebase wird geladen …</td></tr>':dguv.map((r,i)=>`<tr><td><b>${esc(r.name)}</b></td><td>${esc(r.inventory)}</td><td>${esc(r.location)}</td><td>${esc(r.due)}</td><td><span class="status">${esc(r.status)}</span></td><td><button class="icon-btn" data-dguv-index="${i}">Details</button></td></tr>`).join('')||'<tr><td colspan="6">Keine DGUV-Geräte in Firebase gefunden.</td></tr>';
+ document.getElementById('dguv-body').innerHTML=(!cloudDguvReady&&!dguv.length)?'<tr><td colspan="6">Firebase wird geladen …</td></tr>':dguv.map((r,i)=>`<tr><td><b>${esc(r.name)}</b></td><td>${esc(r.inventory)}</td><td>${esc(r.location)}</td><td>${esc(r.due)}</td><td><span class="status">${esc(r.status)}</span></td><td><button class="icon-btn" data-dguv-index="${i}">Details</button></td></tr>`).join('')||'<tr><td colspan="6">Keine DGUV-Geräte in Firebase gefunden.</td></tr>';
  document.getElementById('metric-dguv').textContent=cloudDguvReady?dguv.length:'–';
  document.getElementById('dguv-total').textContent=cloudDguvReady?dguv.length:'–';
  document.getElementById('dguv-completed').textContent=cloudDguvReady?dguv.filter(x=>/geprüft|bestanden|aktuell|ok|i\.o\./i.test(x.status)).length:'–';
@@ -224,9 +249,9 @@ function renderDguv(){
 function renderHistory(){
  const q=document.getElementById('history-search').value.toLowerCase(),type=document.getElementById('history-filter').value;
  let rows=history.filter(p=>typeMatches(p,type)&&(`${p.id} ${p.machine} ${p.category} ${p.employee}`).toLowerCase().includes(q));
- document.getElementById('history-body').innerHTML=!cloudProtocolsReady?'<tr><td colspan="6">Firebase-Verbindung wird hergestellt …</td></tr>':rows.map(p=>`<tr><td><b>${esc(p.id)}</b></td><td>${esc(p.machine)}</td><td>${esc(p.date)}</td><td>${esc(p.employee)}</td><td><span class="status ${p.result==='Mangel'?'danger':''}">${esc(p.result)}</span></td><td><div class="actions"><button class="icon-btn" data-report="${esc(p.id)}">Ansehen / PDF</button></div></td></tr>`).join('')||'<tr><td colspan="6">Keine passenden Protokolle in Firebase gefunden.</td></tr>';
- document.getElementById('side-history-count').textContent=cloudProtocolsReady?history.length:'–';
- document.getElementById('metric-proto').textContent=cloudProtocolsReady?history.length:'–';
+ document.getElementById('history-body').innerHTML=(!cloudProtocolsReady&&!history.length)?'<tr><td colspan="6">Firebase-Verbindung wird hergestellt …</td></tr>':rows.map(p=>`<tr><td><b>${esc(p.id)}</b></td><td>${esc(p.machine)}</td><td>${esc(p.date)}</td><td>${esc(p.employee)}</td><td><span class="status ${p.result==='Mangel'?'danger':''}">${esc(p.result)}</span></td><td><div class="actions"><button class="icon-btn" data-report="${esc(p.id)}">Ansehen / PDF</button></div></td></tr>`).join('')||'<tr><td colspan="6">Keine passenden Protokolle in Firebase gefunden.</td></tr>';
+ document.getElementById('side-history-count').textContent=cloudProtocolsReady?history.length:(history.length?'≥'+history.length:'–');
+ document.getElementById('metric-proto').textContent=cloudProtocolsReady?history.length:(history.length?'≥'+history.length:'–');
  renderDashboard();
 }
 function photoUrl(p){return typeof p==='string'?p:(p?.dataUrl||p?.data||p?.url||p?.src||'');}
@@ -347,17 +372,28 @@ document.querySelectorAll('[data-action="dguv"]').forEach(b=>b.onclick=()=>openM
 document.getElementById('dguv-body').addEventListener('click',e=>{const b=e.target.closest('[data-dguv-index]');if(!b)return;const p=dguv[Number(b.dataset.dguvIndex)];if(!p)return;const raw=p.raw;const docs=[...(Array.isArray(raw.documents)?raw.documents:[]),...(Array.isArray(raw.attachments)?raw.attachments:[])];const linkHtml=docs.map((v,i)=>{const u=typeof v==='string'?v:v.url||v.dataUrl||'';return /^https:\/\//.test(u)?`<p><a href="${esc(u)}" target="_blank" rel="noopener">Dokument ${i+1} öffnen</a></p>`:u.startsWith('data:application/pdf;base64,')?`<p><a href="${esc(u)}" download="DGUV_Dokument_${i+1}.pdf">Dokument ${i+1} herunterladen</a></p>`:''}).join('');openModal(p.name,'Gespeicherter DGUV-Datensatz',`<div class="field-grid"><p><b>Inventar:</b> ${esc(p.inventory)}</p><p><b>Standort:</b> ${esc(p.location)}</p><p><b>Fällig:</b> ${esc(p.due)}</p><p><b>Status:</b> ${esc(p.status)}</p></div>${linkHtml||'<p>Keine PDF-Anlagen direkt im Dokument referenziert.</p>'}`)});
 document.getElementById('cloud-backup').onclick=()=>{if(!cloudProtocolsReady){toast('Cloud ist noch nicht geladen. Export nicht möglich.');return}const data=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),source:'ecb-maintenance',protocols:history,dguv_devices:dguv.map(x=>({id:x.id,...x.raw}))},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(data);a.download='ECB_Firebase_Protokolle_Export_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
 function cloudLoadError(where,e){cloudError=where+': '+(e?.message||String(e));cloudState('Firebase-Verbindung fehlgeschlagen',cloudError,true);toast('Cloud-Fehler: '+where);}
-window.ECB_ACCEPT_SNAPSHOT=(docs,fromCache)=>{history=docs.map(d=>normalizeProtocol(d.id,d.data)).sort((a,b)=>dateValue(b)-dateValue(a));cloudProtocolsReady=!fromCache;cloudState(cloudProtocolsReady?'Firebase verbunden':'Lokaler Firebase-Zwischenspeicher',cloudProtocolsReady?`${history.length} Protokolle geladen`:'Warte auf bestätigte Serverdaten',false);renderHistory();renderCalendar();};
+window.ECB_ACCEPT_SNAPSHOT=(docs,fromCache)=>{history=docs.map(d=>normalizeProtocol(d.id,d.data)).sort((a,b)=>dateValue(b)-dateValue(a));cloudProtocolsReady=!fromCache;cloudState(cloudProtocolsReady?'Firebase verbunden':history.length?'Teilbestand historischer Protokolle geladen':'Firebase-Abgleich läuft',cloudProtocolsReady?`${history.length} Protokolle geladen`:(history.length?`Mindestens ${history.length} Protokolle geladen; weitere Quellen nicht bestätigt`:'Warte auf bestätigte Serverdaten'),false);renderHistory();renderCalendar();};
 window.ECB_ACCEPT_DGUV=(docs,fromCache)=>{dguv=docs.map(d=>normalizeDguv(d.id,d.data));cloudDguvReady=!fromCache;cloudState(cloudProtocolsReady&&cloudDguvReady?'Firebase live synchronisiert':'Firebase wird geladen',`${history.length} Protokolle · ${dguv.length} DGUV-Geräte`,false);renderDguv();};
 window.ECB_CLOUD_ERROR=cloudLoadError;
+window.ECB_SOURCES_REPORT=()=>window.ECB_GET_SOURCE_STATUS?.();
+document.getElementById('cloud-sources').addEventListener('click',()=>{
+ const x=window.ECB_SOURCES_REPORT?.();
+ if(!x)return toast('Firebase-Verbindung noch nicht bereit.');
+ const row=r=>`<div class="due-row"><div><b>${esc(r.source)}</b><small>${esc(r.status)}</small></div><div class="due-right"><b>${r.records===null?'–':r.records}</b><small>Dokumente</small></div></div>`;
+ openModal('Firebase-Datenquellen','Diese Ansicht liest nur den Status und verändert keine Daten.',`<h3>Wartungsprotokolle</h3>${x.protocols.map(row).join('')}<h3 style="margin-top:18px">DGUV-Geräte</h3>${x.devices.map(row).join('')}`);
+});
 let toastTimer;function toast(s){clearTimeout(toastTimer);const box=document.getElementById('toast');box.textContent=s;box.classList.add('show');toastTimer=setTimeout(()=>box.classList.remove('show'),3500)};
 document.getElementById('auth-form').addEventListener('submit',async e=>{
- e.preventDefault();const b=document.getElementById('auth-submit');b.disabled=true;
- try{if(!window.ECB_LOGIN)throw new Error('Firebase-Anmeldung nicht geladen. Bitte Internetverbindung prüfen.');
- await window.ECB_LOGIN(document.getElementById('firebase-email').value.trim(),document.getElementById('firebase-password').value);
- document.getElementById('firebase-password').value='';document.getElementById('auth-feedback').textContent='Anmeldung erfolgreich. Lade Cloud-Daten …';
- }catch(ex){document.getElementById('auth-feedback').textContent='Anmeldung fehlgeschlagen: '+(ex.message||ex);}
- finally{b.disabled=false;}
+ e.preventDefault();const btn=document.getElementById('auth-submit');btn.disabled=true;
+ const username=document.getElementById('login-user').value.trim();
+ const password=document.getElementById('login-pass').value;
+ try{
+   if(!window.ECB_LOGIN)throw new Error('Anmeldedienst wird gerade geladen. Bitte erneut versuchen.');
+   await window.ECB_LOGIN(username,password);
+   document.getElementById('login-pass').value='';
+   document.getElementById('auth-feedback').textContent='Angemeldet. Die Cloud wird synchronisiert …';
+ }catch(ex){document.getElementById('auth-feedback').textContent=ex?.message||'Anmeldung fehlgeschlagen.';}
+ finally{btn.disabled=false;}
 });
 document.getElementById('auth-logout').addEventListener('click',()=>window.ECB_LOGOUT?.());
 renderHistory();renderDguv();renderCalendar();
@@ -372,35 +408,158 @@ try {
  const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
  const protocols=collection(db,'artifacts','ecb-maintenance-live','public','data','protocols');
  const devices=collection(db,'artifacts','ecb-maintenance-live','public','data','dguv_devices');
- let unsubProtocols=null,unsubDevices=null;
- const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubProtocols=null;unsubDevices=null;window.ECB_SAVE=null;};
- window.ECB_LOGIN=async(email,password)=>signInWithEmailAndPassword(auth,email,password);
- window.ECB_LOGOUT=async()=>signOut(auth);
+ const saveProtocols=collection(db,'ecb_protocols'); // Legacy production collection; new records must stay visible to old clients.
+ // Additional read-only historical Firestore collections verified / suspected from the Firebase console.
+ const protocolSources=[
+  {name:'ecb_protocols',ref:collection(db,'ecb_protocols')},
+  {name:'artifacts/ecb-maintenance',ref:collection(db,'artifacts','ecb-maintenance','public','data','protocols')},
+  {name:'artifacts/ecb-maintenance-live',ref:protocols}
+ ];
+ const deviceSources=[
+  {name:'ecb_dguv_devices',ref:collection(db,'ecb_dguv_devices')},
+  {name:'dguv_devices',ref:collection(db,'dguv_devices')},
+  {name:'artifacts/ecb-maintenance',ref:collection(db,'artifacts','ecb-maintenance','public','data','dguv_devices')},
+  {name:'artifacts/ecb-maintenance-live',ref:devices}
+ ];
+ const stops=[],protocolBySource=new Map(),deviceBySource=new Map();
+ function combine(sources,store){
+  const records=new Map();
+  for(const source of sources){
+    for(const row of store.get(source.name)?.docs||[]){
+      const logicalId=String(row.data?.id||'').trim();
+      // Never equate unrelated auto-generated Firestore document IDs across collections.
+      const key=logicalId
+        ? logicalId+'|'+String(row.data?.machine||'').trim().toLowerCase()+'|'+String(row.data?.date||'').trim()
+        : source.name+':'+row.id;
+      if(!records.has(key)){
+        records.set(key,{id:row.id,data:{...row.data},source:source.name});
+        continue;
+      }
+      const existing=records.get(key);
+      // All merges are in RAM. NEVER write combined data back into old documents.
+      for(const [field,value] of Object.entries(row.data||{})){
+        if((existing.data[field]===undefined||existing.data[field]===null||existing.data[field]==='')&&value!==undefined){
+          existing.data[field]=value;
+        }
+      }
+      // Preserve photos + signature even if one historical copy is incomplete.
+      const images=[...(Array.isArray(existing.data.photos)?existing.data.photos:[]),...(Array.isArray(row.data?.photos)?row.data.photos:[])];
+      const photoKeys=new Set();
+      existing.data.photos=images.filter(photo=>{
+        const key=typeof photo==='string'?photo:JSON.stringify(photo);
+        if(photoKeys.has(key))return false;
+        photoKeys.add(key);return true;
+      });
+      if(!existing.data.signature&&row.data?.signature)existing.data.signature=row.data.signature;
+      if((row.data?.points?.length||0)>(existing.data.points?.length||0))existing.data.points=row.data.points;
+      if(!existing.data.remarks&&row.data?.remarks)existing.data.remarks=row.data.remarks;
+    }
+  }
+  return {
+    docs:Array.from(records.values(),r=>({id:r.id,data:r.data})),
+    complete:sources.every(source=>store.get(source.name)?.ready===true),
+    errors:sources.filter(source=>store.get(source.name)?.error).map(source=>source.name)
+  };
+}
+function sourceDiagnostics(){
+  const group=(sources,store)=>sources.map(source=>{
+    const state=store.get(source.name);
+    return {
+      source:source.name,
+      status:!state?'Ausstehend':state.error?'Fehler ('+state.error+')':state.ready?'Server bestätigt':'Nur Cache',
+      records:state?.docs?.length??null
+    };
+  });
+  return {protocols:group(protocolSources,protocolBySource),devices:group(deviceSources,deviceBySource)};
+}
+window.ECB_GET_SOURCE_STATUS=sourceDiagnostics;
+function redrawProtocols(){
+  const state=combine(protocolSources,protocolBySource);
+  window.ECB_ACCEPT_SNAPSHOT(state.docs,!state.complete);
+  if(state.errors.length)window.ECB_CLOUD_ERROR('Protokolle: unvollständiger Datenzugriff',new Error('Quellen: '+state.errors.join(', ')));
+ }
+ function redrawDevices(){
+  const state=combine(deviceSources,deviceBySource);
+  window.ECB_ACCEPT_DGUV(state.docs,!state.complete);
+  if(state.errors.length)window.ECB_CLOUD_ERROR('DGUV: unvollständiger Datenzugriff',new Error('Quellen: '+state.errors.join(', ')));
+ }
+ function listen(sources,store,redraw){
+  for(const source of sources){
+   const stop=onSnapshot(source.ref,{includeMetadataChanges:true},snap=>{
+    store.set(source.name,{ready:!snap.metadata.fromCache,docs:snap.docs.map(d=>({id:d.id,data:d.data()})),error:null});
+    redraw();
+   },err=>{store.set(source.name,{ready:false,docs:[],error:err?.code||'unknown'});redraw();});
+   stops.push(stop);
+  }
+ }
+
+ const teardown=()=>{for(const stop of stops.splice(0)){try{stop()}catch{}}protocolBySource.clear();deviceBySource.clear();window.ECB_SAVE=null;};
+
+ // The ECB login form uses the historical username and password.
+ // Firebase Authentication is only an invisible session provider. A one-time
+ // admin migration creates the corresponding accounts with the SAME passwords.
+ // This avoids unsafe password lists in the published JavaScript and
+ // eliminates a separate login screen, API endpoint, or Cloud Functions bill.
+ async function emailAliasFor(username){
+   const normalized=String(username||'').normalize('NFKC').trim().toLocaleLowerCase('de-DE');
+   if(normalized.length<1||normalized.length>80)throw new Error('Bitte gültigen Benutzernamen eingeben.');
+   const bytes=new TextEncoder().encode(normalized);
+   const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',bytes));
+   return 'u'+Array.from(digest,b=>b.toString(16).padStart(2,'0')).join('').slice(0,48)+'@accounts.ecb.invalid';
+ }
+ window.ECB_LOGIN=async(username,password)=>{
+   if(!password)throw new Error('Bitte Passwort eingeben.');
+   const email=await emailAliasFor(username);
+   try{
+     const response=await signInWithEmailAndPassword(auth,email,password);
+     if(!response.user)throw Error('Anmeldung wurde nicht bestätigt.');
+     sessionStorage.setItem('ecb_current_user',String(username).trim());
+     sessionStorage.setItem('ecb_current_fullname',response.user.displayName||String(username).trim());
+   }catch(e){
+     if(String(e?.code||'').includes('auth/'))throw new Error('Benutzername oder Passwort nicht erkannt. Falls dein altes Konto noch nicht übernommen wurde, ist die Migration erforderlich.');
+     throw e;
+   }
+ };
+ window.ECB_LOGOUT=async()=>{
+   sessionStorage.removeItem('ecb_current_user');sessionStorage.removeItem('ecb_current_fullname');
+   await signOut(auth);
+ };
+ // Logout above also clears the username session; keep only that handler.
  onAuthStateChanged(auth,user=>{
    teardown();
    if(!user){
      window.ECB_ACCEPT_SNAPSHOT([],true);window.ECB_ACCEPT_DGUV([],true);document.getElementById('report-content').innerHTML='';document.querySelector('[data-page="dashboard"]')?.click();
-     document.getElementById('auth-panel').style.display='block';
+     document.body.classList.add('ecb-locked');document.getElementById('auth-panel').style.display='block';
      document.getElementById('auth-identity').style.display='none';
      document.getElementById('cloud-pill').textContent='Anmeldung erforderlich';
      document.getElementById('sync-label').textContent='Nicht angemeldet';
-     document.getElementById('sync-detail').textContent='Bitte mit Firebase anmelden';
-     document.getElementById('cloud-message-text').textContent='Bitte mit einer berechtigten Firebase-E-Mail und Passwort anmelden.';
+     document.getElementById('sync-detail').textContent='Bitte anmelden';
+     document.getElementById('cloud-message-text').textContent='Bitte mit deinem Benutzerkonto anmelden.';
      document.getElementById('cloud-message').classList.remove('live');
      return;
    }
-   document.getElementById('auth-panel').style.display='none';
+   document.body.classList.remove('ecb-locked');document.getElementById('auth-panel').style.display='none';
    document.getElementById('auth-identity').style.display='flex';
-   document.getElementById('auth-email').textContent=user.email||'Angemeldet';
+   document.getElementById('auth-email').textContent=sessionStorage.getItem('ecb_current_fullname')||user.displayName||'Angemeldet';
    window.ECB_SAVE=async protocol=>{
      if(!navigator.onLine)throw Error('Offline: Speichern nicht möglich');
-     const reference=doc(protocols),record={...protocol,id:reference.id};
+     const reference=doc(saveProtocols);
+     const newNumber='ECB-'+new Date().toISOString().replace(/\D/g,'').slice(0,14)+'-'+reference.id.slice(0,5).toUpperCase();
+     const record={...protocol,id:newNumber};
      await setDoc(reference,record);
-     if(!(await getDocFromServer(reference)).exists())throw Error('Firestore hat die Speicherung nicht bestätigt.');
-     return reference.id;
+     const saved=await getDocFromServer(reference);
+     if(!saved.exists())throw Error('Firestore hat die Speicherung nicht bestätigt.');
+     const data=saved.data();
+     if(data.id!==record.id||data.machine!==record.machine||
+        !Array.isArray(data.photos)||data.photos.length!==record.photos.length||
+        !Array.isArray(data.points)||data.points.length!==record.points.length||
+        data.signature!==record.signature){
+       throw Error('Protokoll wurde nicht vollständig aus Firebase zurückgelesen. Bitte keinesfalls erneut ohne Prüfung speichern.');
+     }
+     return record.id;
    };
-   unsubProtocols=onSnapshot(protocols,{includeMetadataChanges:true},snap=>window.ECB_ACCEPT_SNAPSHOT(snap.docs.map(d=>({id:d.id,data:d.data()})),snap.metadata.fromCache),err=>window.ECB_CLOUD_ERROR('Protokolle',err));
-   unsubDevices=onSnapshot(devices,{includeMetadataChanges:true},snap=>window.ECB_ACCEPT_DGUV(snap.docs.map(d=>({id:d.id,data:d.data()})),snap.metadata.fromCache),err=>window.ECB_CLOUD_ERROR('DGUV',err));
+   listen(protocolSources,protocolBySource,redrawProtocols);
+   listen(deviceSources,deviceBySource,redrawDevices);
  },err=>window.ECB_CLOUD_ERROR('Anmeldung',err));
 } catch(e){window.ECB_CLOUD_ERROR('Firebase',e);}
 </script>
