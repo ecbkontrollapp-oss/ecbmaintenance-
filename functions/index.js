@@ -88,6 +88,9 @@ export const adminResetTemporaryPassword=onCall(callable,async request=>{
 });
 export const changeMyPassword=onCall(callable,async request=>{
  const {user}=await identity(request,'staff',true);
+ const lastLogin=Number(request.auth?.token?.auth_time||0);
+ if(!lastLogin||Math.abs(Date.now()/1000-lastLogin)>900)
+   throw new HttpsError('failed-precondition','Für den Passwortwechsel bitte erneut anmelden (Sitzung älter als 15 Minuten).');
  const newPassword=requireString(request.data?.newPassword,128);
  if(newPassword.length<12)throw new HttpsError('invalid-argument','Neues Passwort: mindestens 12 Zeichen.');
  await auth.updateUser(user.uid,{password:newPassword});
@@ -162,15 +165,20 @@ const smtpClient=()=>{
 async function sendProtocol({protocol,recipient,jobId,actorUid,automatic}){
  const key=hash('mail:'+jobId),job=db.collection('ecb_mail_jobs').doc(key);
  const lock=db.collection('ecb_mail_locks').doc(hash(protocol.id+'|'+recipient));
+ const hour=new Date().toISOString().slice(0,13).replace(/[-T]/g,'');
+ const rate=actorUid?db.collection('ecb_mail_rate').doc(actorUid+'_'+hour):null;
  let reused=false;
  await db.runTransaction(async tx=>{
-   const [prior,previous]=await Promise.all([tx.get(job),tx.get(lock)]);
+   const [prior,previous,quota]=await Promise.all([tx.get(job),tx.get(lock),rate?tx.get(rate):Promise.resolve(null)]);
    if(prior.exists){reused=true;return;}
+   if(quota&&(quota.data()?.count||0)>=10)
+     throw new HttpsError('resource-exhausted','E-Mail-Limit erreicht: maximal 10 manuelle Protokollsendungen pro Mitarbeiter und Stunde.');
    const at=previous.data()?.requestedAt?.toMillis?.()||0;
    if(Date.now()-at<120000)throw new HttpsError('resource-exhausted','Dieses Protokoll wurde gerade an denselben Empfänger versendet oder eingeplant. Doppelversand verhindert.');
    tx.create(job,{protocolId:protocol.id,recipient,actorUid:actorUid||null,
      automatic:!!automatic,status:'preparing',createdAt:FieldValue.serverTimestamp()});
    tx.set(lock,{requestedAt:FieldValue.serverTimestamp(),jobId:key});
+   if(rate)tx.set(rate,{count:FieldValue.increment(1),updatedAt:FieldValue.serverTimestamp()},{merge:true});
  });
  if(reused)return {ok:false,status:'already-requested',noDuplicate:true};
  try{
@@ -178,7 +186,7 @@ async function sendProtocol({protocol,recipient,jobId,actorUid,automatic}){
    const {from,client}=smtpClient();
    const info=await client.sendMail({
      from,to:recipient,
-     subject:'ECB Wartungsprotokoll '+String(protocol.id).slice(0,100)+' – '+String(protocol.machine).slice(0,80),
+     subject:'ECB Wartungsprotokoll '+String(protocol.id).replace(/[\r\n]/g,' ').slice(0,100)+' – '+String(protocol.machine).replace(/[\r\n]/g,' ').slice(0,80),
      text:'Anbei das vollständig gespeicherte Wartungsprotokoll '+protocol.id+' für '+protocol.machine+
        '.\n\nMit freundlichen Grüßen\nE.C.B. Reinigungssysteme GmbH',
      attachments:[{filename:'ECB_Wartungsprotokoll_'+String(protocol.id).replace(/[^a-zA-Z0-9-]/g,'_')+'.pdf',
