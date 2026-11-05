@@ -2,7 +2,7 @@
 // All privileged actions go through Firebase callable functions (server checks claims).
 import {getApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getAuth,onAuthStateChanged,signOut} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
-import {getFirestore,collection,doc,onSnapshot} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+import {getFirestore,collection,doc,onSnapshot,query,orderBy,limit} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js';
 
 const app=getApp(),auth=getAuth(app),db=getFirestore(app),funcs=getFunctions(app,'europe-west3');
@@ -16,11 +16,13 @@ const explain=e=>{
   return String(e?.message||'Aktion fehlgeschlagen').slice(0,300);
 };
 const status=(message,isError=false)=>{const el=$('ecb-admin-status');if(el){el.textContent=message;el.style.color=isError?'#ad3535':'#386927';}};
-let currentUid='',profileStop=null,archiveStop=null,lastTemp='',mailInFlight=new Set();
+let currentUid='',profileStop=null,archiveStop=null,mailStop=null,lastTemp='',mailInFlight=new Set(),passwordForced=false;
 const nav=$('ecb-admin-nav');
 const setPasswordWall=open=>{
-  document.body.classList.toggle('ecb-password-pending',!!open);
-  const wall=$('ecb-password-wall');if(wall)wall.hidden=!open;
+  const show=!!open||passwordForced;
+  document.body.classList.toggle('ecb-password-pending',show);
+  const wall=$('ecb-password-wall');if(wall)wall.hidden=!show;
+  const cancel=$('ecb-password-change-cancel');if(cancel)cancel.hidden=passwordForced;
 };
 const clearSecrets=()=>{
  lastTemp='';const cell=$('ecb-admin-temp-password');
@@ -87,6 +89,7 @@ $('ecb-password-change-form')?.addEventListener('submit',async event=>{
  try{
    await request('changeMyPassword',{newPassword:password});
    event.currentTarget.reset();message.textContent='Gespeichert. Bitte jetzt mit deinem neuen Passwort anmelden.';
+   passwordForced=false;
    await signOut(auth);setPasswordWall(false);
  }catch(e){message.textContent=explain(e);}finally{btn.disabled=false;}
 });
@@ -140,8 +143,8 @@ $('history-body')?.addEventListener('click',async event=>{
  }catch(err){alert(explain(err));}finally{button.disabled=false;}
 });
 onAuthStateChanged(auth,async user=>{
- profileStop?.();archiveStop?.();profileStop=null;archiveStop=null;clearSecrets();
- currentUid=user?.uid||'';window.ECB_ADMIN_ROLE='staff';window.ECB_ARCHIVED_KEYS=new Set();
+ profileStop?.();archiveStop?.();mailStop?.();profileStop=null;archiveStop=null;mailStop=null;clearSecrets();
+ passwordForced=false;currentUid=user?.uid||'';window.ECB_ADMIN_ROLE=null;window.ECB_ARCHIVED_KEYS=new Set();
  if(nav)nav.hidden=true;
  setPasswordWall(false);
  if(!user)return;
@@ -153,13 +156,24 @@ onAuthStateChanged(auth,async user=>{
  }catch(e){status('Anmeldestatus: '+explain(e),true);return;}
  window.ECB_ADMIN_ROLE=role;
  if(nav)nav.hidden=role!=='admin';
+ window.renderHistory?.();
  if(role==='unassigned'){status('Firebase-Konto besteht, aber die Mitarbeiter-/Adminfreigabe wurde noch nicht vorgenommen.',true);return;}
  profileStop=onSnapshot(doc(db,'ecb_staff_profiles',user.uid),snapshot=>{
    const profile=snapshot.data();
    if(!profile){status('Mitarbeiterprofil fehlt. Firebase-Adminfreigabe erforderlich.',true);return;}
    if(profile.disabled){signOut(auth).catch(()=>{});return;}
-   if(profile.mustChangePassword){setPasswordWall(true);}
+   passwordForced=profile.mustChangePassword===true;
+   setPasswordWall(passwordForced);
  },err=>status('Profil: '+explain(err),true));
  loadArchives();
- if(role==='admin')await loadUsers();
+ if(role==='admin'){
+   await loadUsers();
+   mailStop=onSnapshot(query(collection(db,'ecb_mail_jobs'),orderBy('createdAt','desc'),limit(30)),snapshot=>{
+     const jobs=snapshot.docs.map(d=>d.data());
+     const panel=$('ecb-admin-mail-jobs');if(!panel)return;
+     panel.innerHTML=jobs.length?jobs.map(j=>'<div class="ecb-user-row"><div><strong>'+safe(j.protocolId)+
+       '</strong><small>'+safe(j.recipient)+' · '+(j.automatic?'Automatisch':'Manuell')+'</small></div><b>'+
+       safe(j.status)+'</b></div>').join(''):'Noch keine E-Mail-Aufträge.';
+   },e=>status('Versandstatus: '+explain(e),true));
+ }
 });
