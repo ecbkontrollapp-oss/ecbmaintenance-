@@ -1,0 +1,12 @@
+{
+  "name": "ecb-wartung-admin-tools",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "backup": "node backup-firestore.mjs",
+    "migrate-users": "node migrate-legacy-users.mjs"
+  },
+  "dependencies": {
+    "firebase-admin": "^13.0.0"
+  }
+}
