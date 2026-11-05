@@ -5,10 +5,10 @@ import vm from 'node:vm';
 const server=readFileSync(new URL('../index.js',import.meta.url),'utf8');
 const pdf=readFileSync(new URL('../pdf.mjs',import.meta.url),'utf8');
 const web=readFileSync(new URL('../../index.html',import.meta.url),'utf8');
-const browser=readFileSync(new URL('../../features/admin.js',import.meta.url),'utf8');
+const browser=readFileSync(new URL('../../admin/ecb-admin.mjs',import.meta.url),'utf8');
 const rules=readFileSync(new URL('../../firestore.rules.admin.staged',import.meta.url),'utf8');
 test('browser module and admin UI parse without invoking Firebase',()=>{
- new vm.Script(browser);
+ new vm.Script(browser.replace(/^\s*import\b[^\n]*$/gm,''));
  const blocks=[...web.matchAll(/<script\b([^>]*)>([\s\S]*?)<\/script>/g)];
  let scripts=0;
  for(const [,attributes,raw] of blocks){
@@ -18,11 +18,11 @@ test('browser module and admin UI parse without invoking Firebase',()=>{
    scripts++;
  }
  assert.ok(scripts>=3);
- assert.ok(web.includes('<script src="features/admin.js"></script>'));
+ assert.ok(web.includes('<script type="module" src="./admin/ecb-admin.mjs"></script>'));
 });
 test('staff and admin controls exist and are not trusted as authority',()=>{
- for(const id of ['nav-admin','view-admin','admin-create-user','account-password-form',
-   'admin-users-list','one-time-password','admin-archives-list','send-current-report'])
+ for(const id of ['ecb-admin-nav','view-admin','ecb-admin-create-user','ecb-password-change-form',
+   'ecb-admin-users','ecb-admin-temp-result','ecb-admin-archive-list','ecb-admin-mail-jobs'])
    assert.ok(web.includes('id="'+id+'"'),id);
  assert.ok(server.includes("identity(request,'admin')"));
  assert.ok(server.includes("identity(request,'staff')"));
@@ -37,7 +37,7 @@ test('temporary password is generated only on the server',()=>{
  assert.match(server,/mustChangePassword:true/);
  assert.match(server,/mustChangePassword:false/);
  assert.match(server,/auth\.revokeRefreshTokens\(/);
- assert.match(browser,/one-time-password-value/);
+ assert.match(browser,/ecb-admin-temp-password/);
  assert.doesNotMatch(browser,/createUserWithEmailAndPassword|randomBytes\(/);
 });
 test('automatic mail uses one fixed recipient, manual mail requires staff',()=>{
