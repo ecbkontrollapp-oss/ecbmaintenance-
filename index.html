@@ -39,10 +39,24 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
 #report-content .report-sign{width:100%;max-width:420px;max-height:145px;object-fit:contain;background:white;border:1px solid #dfe9da;padding:7px;border-radius:10px}
 #report-content .report-photos{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:10px}
 @media(max-width:650px){#report-content .report-photos{grid-template-columns:1fr}}
+
+/* Original ECB-style username/password entry, no Firebase-specific UI. */
+body.ecb-locked{background:radial-gradient(circle at 15% 10%,#e9f4e1 0,transparent 37%),linear-gradient(135deg,#f7faf5 0%,#edf5eb 100%)}
+body.ecb-locked .layout{display:block;min-height:100vh}
+body.ecb-locked .sidebar,body.ecb-locked .topbar,body.ecb-locked .view,body.ecb-locked #cloud-message,body.ecb-locked #auth-identity,body.ecb-locked .footer-note{display:none!important}
+body.ecb-locked .content{display:flex;align-items:center;justify-content:center;min-height:100vh;padding:28px 15px}
+#auth-panel{max-width:510px;margin:0 auto 23px;padding:32px!important;border:1px solid #d4e5cd!important;background:linear-gradient(150deg,#fff,#f4faef)!important;box-shadow:0 20px 55px rgba(33,63,31,.1)}
+body.ecb-locked #auth-panel{display:block!important;width:100%;margin:0}
+body:not(.ecb-locked) #auth-panel{display:none!important}
+#auth-panel .field-grid{grid-template-columns:1fr}
+#auth-panel .field label{font-size:13px}
+#auth-panel .field input{font-size:16px;min-height:49px}
+#auth-submit{width:100%;min-height:50px;font-size:14px}
+@media(max-width:730px){body.ecb-locked .content{padding:17px}#auth-panel{padding:23px!important}}
 </style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js" crossorigin="anonymous"></script>
 </head>
-<body>
+<body class="ecb-locked">
 <div class="layout">
  <aside class="sidebar">
   <div class="brand"><div class="logo-plate original-logo-plate"><img data-ecb-logo alt="Original ECB Firmenlogo" /></div><div><strong>ECB<br>Reinigungssysteme</strong><small>Digitales Wartungssystem</small></div></div>
@@ -53,16 +67,26 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
    <button class="nav-btn" data-page="dguv"><span class="ico">♧</span> DGUV V3 <span class="num" id="side-dguv-count">–</span></button>
    <button class="nav-btn" data-page="history"><span class="ico">▣</span> Protokolle <span class="num" id="side-history-count">–</span></button>
   </nav></div>
-  <div class="side-bottom"><div class="cloud-state"><span class="pulse"></span><div><b id="sync-label">Firebase: wird verbunden</b><span id="sync-detail">Geschützte Anmeldung erforderlich</span></div></div><div class="profile"><div class="avatar">EC</div><div><b>ECB Wartung</b><small>Wartung & Prüfung</small></div></div></div>
+  <div class="side-bottom"><div class="cloud-state"><span class="pulse"></span><div><b id="sync-label">Cloud wird verbunden</b><span id="sync-detail">Benutzeranmeldung erforderlich</span></div></div><div class="profile"><div class="avatar">EC</div><div><b>ECB Wartung</b><small>Wartung & Prüfung</small></div></div></div>
  </aside>
- <div class="app-main"><header class="topbar"><div class="mobile-brand"><div class="logo-plate original-logo-plate"><img data-ecb-logo alt="Original ECB Firmenlogo" /></div><strong>ECB Wartung</strong></div><div class="breadcrumb">ECB Reinigungssysteme <span>›</span> <strong id="breadcrumb-current">Übersicht</strong></div><div class="top-right"><span class="datetime" id="today-label"></span><span class="cloud-badge" id="cloud-pill">Anmeldung erforderlich</span><span class="top-icon" aria-label="Benachrichtigungen">♧</span><span class="user-avatar">EC</span></div></header>
- <main class="content"><section id="auth-panel" class="panel" style="max-width:640px;margin:0 auto 23px;padding:27px;border:1px solid #d4e5cd;background:linear-gradient(145deg,#fff,#f4faef)">
- <div class="eyebrow">Geschützter Zugriff</div><h2 style="margin:7px 0 5px">Mit Firebase anmelden</h2>
- <p style="color:#6a7d71;margin-bottom:18px">Aus Datenschutzgründen werden Protokolle, Dokumentationsfotos und Unterschriften erst nach einer bestätigten Firebase-Anmeldung geladen.</p>
- <form id="auth-form" autocomplete="on"><div class="field-grid"><div class="field"><label for="firebase-email">E-Mail</label><input type="email" id="firebase-email" autocomplete="username" required placeholder="E-Mail-Adresse"></div><div class="field"><label for="firebase-password">Passwort</label><input type="password" id="firebase-password" autocomplete="current-password" required placeholder="Firebase-Passwort"></div></div>
- <button class="button primary" style="margin-top:16px" id="auth-submit" type="submit">Anmelden</button><span class="muted" id="auth-feedback" style="display:block;margin-top:12px" role="status">Alte lokal gespeicherte App-Passwörter sind keine Firebase-Anmeldedaten.</span></form></section>
- <div id="auth-identity" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:13px"><span class="muted" id="auth-email"></span><button class="button subtle" id="auth-logout" type="button">Abmelden</button></div>
- <div class="notice" id="cloud-message" role="status"><span>ⓘ</span><span id="cloud-message-text">Anmeldung erforderlich: Die Originaldaten werden nach erfolgreicher Authentifizierung synchronisiert.</span></div>
+ <div class="app-main"><header class="topbar"><div class="mobile-brand"><div class="logo-plate original-logo-plate"><img data-ecb-logo alt="Original ECB Firmenlogo" /></div><strong>ECB Wartung</strong></div><div class="breadcrumb">ECB Reinigungssysteme <span>›</span> <strong id="breadcrumb-current">Übersicht</strong></div><div class="top-right"><span class="datetime" id="today-label"></span><span class="cloud-badge" id="cloud-pill">Cloud getrennt</span><span class="top-icon" aria-label="Benachrichtigungen">♧</span><span class="user-avatar">EC</span></div></header>
+ <main class="content"><section id="auth-panel" class="panel" aria-label="ECB Anmeldung">
+  <div class="brand" style="padding:0 0 20px"><div class="logo-plate original-logo-plate" style="width:74px;height:74px"><img data-ecb-logo alt="ECB Reinigungssysteme Firmenlogo" /></div><div><strong style="font-size:18px;color:#25402c;line-height:1.25;display:block">ECB Wartungssystem</strong><small style="font-size:12px;color:#688365">E.C.B. Reinigungssysteme GmbH</small></div></div>
+  <div class="eyebrow">Willkommen zurück</div>
+  <h2 style="margin:7px 0 6px">Anmelden</h2>
+  <p style="color:#6a7d71;margin-bottom:22px">Melde dich wie bisher mit deinem Benutzernamen und Passwort an. Die Cloud verbindet sich danach automatisch.</p>
+  <form id="auth-form" autocomplete="on">
+    <div class="field-grid">
+      <div class="field"><label for="login-user">Benutzername</label><input type="text" id="login-user" autocomplete="username" required placeholder="Benutzername" spellcheck="false"></div>
+      <div class="field"><label for="login-pass">Passwort</label><input type="password" id="login-pass" autocomplete="current-password" required placeholder="Passwort"></div>
+    </div>
+    <button class="button primary" id="auth-submit" style="margin-top:20px" type="submit">Anmelden</button>
+    <span class="muted" id="auth-feedback" style="display:block;margin-top:13px" role="status" aria-live="polite"></span>
+  </form>
+  <p class="muted" style="border-top:1px solid #dcebd9;padding-top:16px;margin-top:25px">Deine alten Protokolle und Dokumente bleiben in der bisherigen Cloud gespeichert.</p>
+</section>
+<div id="auth-identity" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:13px"><span class="muted" id="auth-email"></span><button class="button subtle" id="auth-logout" type="button">Abmelden</button></div>
+<div class="notice" id="cloud-message" role="status"><span>ⓘ</span><span id="cloud-message-text">Verbindung zur Cloud wird hergestellt.</span></div>
  <section id="view-dashboard" class="view active"><div class="hero"><div><div class="eyebrow">Wartung & Qualitätssicherung</div><h1>Wartungsübersicht</h1><p>Alle Anlagen, anstehenden Prüfungen und Wartungsprotokolle übersichtlich an einem Ort.</p></div><button class="button primary" data-action="new">＋ Neue Wartung</button></div>
  <div class="metric-grid"><div class="metric"><div class="metric-top">Anlagen im System <span class="metric-icon">⚙</span></div><strong>10</strong><small>8 Maschinen · 2 Kompressorprüfungen</small></div><div class="metric"><div class="metric-top">Wartungen fällig <span class="metric-icon" style="background:#fff3de;color:#bd8529">◷</span></div><strong id="metric-due">–</strong><small id="metric-due-note">Fälligkeit aus Wartungsverlauf</small></div><div class="metric"><div class="metric-top">DGUV Prüfgeräte <span class="metric-icon" style="background:#e7f2f7;color:#387e98">♧</span></div><strong id="metric-dguv">–</strong><small>Bestand aus Firebase</small></div><div class="metric"><div class="metric-top">Gespeicherte Protokolle <span class="metric-icon">▣</span></div><strong id="metric-proto">–</strong><small class="good">Aus der originalen Cloud-Historie</small></div></div>
  <div class="section-head"><div><h2>Wartungsbereiche</h2><p>Wähle eine Anlage und beginne direkt die Kontrolle.</p></div><button class="link" data-page="calendar">Alle Termine ansehen ↗</button></div>
@@ -352,12 +376,16 @@ window.ECB_ACCEPT_DGUV=(docs,fromCache)=>{dguv=docs.map(d=>normalizeDguv(d.id,d.
 window.ECB_CLOUD_ERROR=cloudLoadError;
 let toastTimer;function toast(s){clearTimeout(toastTimer);const box=document.getElementById('toast');box.textContent=s;box.classList.add('show');toastTimer=setTimeout(()=>box.classList.remove('show'),3500)};
 document.getElementById('auth-form').addEventListener('submit',async e=>{
- e.preventDefault();const b=document.getElementById('auth-submit');b.disabled=true;
- try{if(!window.ECB_LOGIN)throw new Error('Firebase-Anmeldung nicht geladen. Bitte Internetverbindung prüfen.');
- await window.ECB_LOGIN(document.getElementById('firebase-email').value.trim(),document.getElementById('firebase-password').value);
- document.getElementById('firebase-password').value='';document.getElementById('auth-feedback').textContent='Anmeldung erfolgreich. Lade Cloud-Daten …';
- }catch(ex){document.getElementById('auth-feedback').textContent='Anmeldung fehlgeschlagen: '+(ex.message||ex);}
- finally{b.disabled=false;}
+ e.preventDefault();const btn=document.getElementById('auth-submit');btn.disabled=true;
+ const username=document.getElementById('login-user').value.trim();
+ const password=document.getElementById('login-pass').value;
+ try{
+   if(!window.ECB_LOGIN)throw new Error('Anmeldedienst wird gerade geladen. Bitte erneut versuchen.');
+   await window.ECB_LOGIN(username,password);
+   document.getElementById('login-pass').value='';
+   document.getElementById('auth-feedback').textContent='Angemeldet. Die Cloud wird synchronisiert …';
+ }catch(ex){document.getElementById('auth-feedback').textContent=ex?.message||'Anmeldung fehlgeschlagen.';}
+ finally{btn.disabled=false;}
 });
 document.getElementById('auth-logout').addEventListener('click',()=>window.ECB_LOGOUT?.());
 renderHistory();renderDguv();renderCalendar();
@@ -366,7 +394,7 @@ renderHistory();renderDguv();renderCalendar();
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getFirestore,collection,onSnapshot,doc,setDoc,getDocFromServer} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import {getAuth,onAuthStateChanged,signInWithCustomToken,signOut} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 const config={apiKey:'AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k',authDomain:'ecb-maintenance.firebaseapp.com',projectId:'ecb-maintenance',appId:'1:229926423123:web:a309c14c708fc886c62d4a6'};
 try {
  const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
@@ -374,24 +402,46 @@ try {
  const devices=collection(db,'artifacts','ecb-maintenance-live','public','data','dguv_devices');
  let unsubProtocols=null,unsubDevices=null;
  const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubProtocols=null;unsubDevices=null;window.ECB_SAVE=null;};
- window.ECB_LOGIN=async(email,password)=>signInWithEmailAndPassword(auth,email,password);
+ // A secure HTTPS endpoint validates original ECB account credentials server-side and
+ // issues a time-limited Firebase custom token. Never publish password lists in GitHub.
+ window.ECB_LOGIN=async(username,password)=>{
+   const endpoint=String(window.ECB_LEGACY_AUTH_ENDPOINT||'').trim();
+   if(!/^https:\/\//.test(endpoint))throw new Error('Der Benutzer-Anmeldedienst ist noch nicht eingerichtet. Es wurden keine Zugangsdaten übertragen.');
+   const ctrl=new AbortController();
+   const timer=setTimeout(()=>ctrl.abort(),12000);
+   let response;
+   try {
+     response=await fetch(endpoint,{method:'POST',mode:'cors',redirect:'error',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password}),signal:ctrl.signal});
+   }catch(e){throw new Error('Anmeldedienst nicht erreichbar. Bitte Verbindung prüfen.');}
+   finally{clearTimeout(timer);}
+   if(!response.ok)throw new Error(response.status===401||response.status===403?'Benutzername oder Passwort ungültig.':'Anmeldung nicht möglich. Bitte später erneut versuchen.');
+   const result=await response.json();
+   if(typeof result.token!=='string'||!result.token)throw new Error('Ungültige Anmeldeantwort.');
+   await signInWithCustomToken(auth,result.token);
+   sessionStorage.setItem('ecb_current_user',username);
+   sessionStorage.setItem('ecb_current_fullname',String(result.displayName||username));
+ };
+ window.ECB_LOGOUT=async()=>{
+   sessionStorage.removeItem('ecb_current_user');sessionStorage.removeItem('ecb_current_fullname');
+   await signOut(auth);
+ };
  window.ECB_LOGOUT=async()=>signOut(auth);
  onAuthStateChanged(auth,user=>{
    teardown();
    if(!user){
      window.ECB_ACCEPT_SNAPSHOT([],true);window.ECB_ACCEPT_DGUV([],true);document.getElementById('report-content').innerHTML='';document.querySelector('[data-page="dashboard"]')?.click();
-     document.getElementById('auth-panel').style.display='block';
+     document.body.classList.add('ecb-locked');document.getElementById('auth-panel').style.display='block';
      document.getElementById('auth-identity').style.display='none';
      document.getElementById('cloud-pill').textContent='Anmeldung erforderlich';
      document.getElementById('sync-label').textContent='Nicht angemeldet';
-     document.getElementById('sync-detail').textContent='Bitte mit Firebase anmelden';
-     document.getElementById('cloud-message-text').textContent='Bitte mit einer berechtigten Firebase-E-Mail und Passwort anmelden.';
+     document.getElementById('sync-detail').textContent='Bitte anmelden';
+     document.getElementById('cloud-message-text').textContent='Bitte mit deinem Benutzerkonto anmelden.';
      document.getElementById('cloud-message').classList.remove('live');
      return;
    }
-   document.getElementById('auth-panel').style.display='none';
+   document.body.classList.remove('ecb-locked');document.getElementById('auth-panel').style.display='none';
    document.getElementById('auth-identity').style.display='flex';
-   document.getElementById('auth-email').textContent=user.email||'Angemeldet';
+   document.getElementById('auth-email').textContent=sessionStorage.getItem('ecb_current_fullname')||user.displayName||'Angemeldet';
    window.ECB_SAVE=async protocol=>{
      if(!navigator.onLine)throw Error('Offline: Speichern nicht möglich');
      const reference=doc(protocols),record={...protocol,id:reference.id};
