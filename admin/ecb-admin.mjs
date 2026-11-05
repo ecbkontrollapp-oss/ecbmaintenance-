@@ -172,12 +172,7 @@ onAuthStateChanged(auth,async user=>{
  loadArchives();
  if(role==='admin'){
    await loadUsers();
-   mailStop=onSnapshot(query(collection(db,'ecb_mail_jobs'),orderBy('createdAt','desc'),limit(30)),snapshot=>{
-     const jobs=snapshot.docs.map(d=>d.data());
-     const panel=$('ecb-admin-mail-jobs');if(!panel)return;
-     panel.innerHTML=jobs.length?jobs.map(j=>'<div class="ecb-user-row"><div><strong>'+safe(j.protocolId)+
-       '</strong><small>'+safe(j.recipient)+' · '+(j.automatic?'Automatisch':'Manuell')+'</small></div><b>'+
-       safe(j.status)+'</b></div>').join(''):'Noch keine E-Mail-Aufträge.';
-   },e=>status('Versandstatus: '+explain(e),true));
+   const panel=$('ecb-admin-mail-jobs');
+   if(panel)panel.textContent='Kostenloser Versand über Cloudflare Workers + Resend. Versandstatus wird in Cloudflare D1 protokolliert; Anzeige hier ist noch nicht aktiv.';
  }
 });
