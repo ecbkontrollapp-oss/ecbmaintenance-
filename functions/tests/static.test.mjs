@@ -25,7 +25,7 @@ test('staff and admin controls exist and are not trusted as authority',()=>{
    'ecb-admin-users','ecb-admin-temp-result','ecb-admin-archive-list','ecb-admin-mail-jobs'])
    assert.ok(web.includes('id="'+id+'"'),id);
  assert.ok(server.includes("identity(request,'admin')"));
- assert.ok(server.includes("identity(request,'staff')"));
+ assert.ok(server.includes("identity(request,'staff',true)"));
  assert.ok(server.includes('ecbAdmin'));
  assert.ok(server.includes('ecbStaff'));
  assert.match(web,/token\.claims\.ecbAdmin===true/);
@@ -59,7 +59,8 @@ test('PDF rejects missing image and missing signature instead of claiming succes
  assert.match(pdf,/if\(!p\.signature\)throw/);
  assert.match(pdf,/signature=await embedImage/);
  assert.match(pdf,/ecb-logo\.b64/);
- assert.match(server,/buildProtocolPdf\(protocol\)/);
+ const client=readFileSync(new URL('../../features/free-mail-client.mjs',import.meta.url),'utf8');
+ assert.match(client,/await buildPdf\(protocol\)/);
 });
 test('admin archive is reversible and never deletes original maintenance docs',()=>{
  assert.match(server,/ecb_archived_protocols/);
