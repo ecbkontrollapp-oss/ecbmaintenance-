@@ -142,7 +142,7 @@ body:not(.ecb-locked) #auth-panel{display:none!important}
  <section id="view-calendar" class="view"><div class="hero"><div><div class="eyebrow">Termine und Intervalle</div><h1>Wartungskalender</h1><p>Fälligkeiten aus den tatsächlich gespeicherten Wartungen. Fehlende Daten werden ausdrücklich gekennzeichnet.</p></div><button class="button primary" data-action="new">＋ Wartung erfassen</button></div><div class="calendar-grid" id="calendar-cards"></div></section>
  <section id="view-retro" class="view"><div class="hero"><div><div class="eyebrow">Nachträgliche Dokumentation</div><h1>Wartung nachtragen</h1><p>Historische Arbeiten mit originalem Datum, Uhrzeit und zuständigem Techniker erfassen.</p></div></div><div class="panel form-panel"><div class="field-grid"><div class="field"><label for="retro-type">Anlage / Wartungsart</label><select id="retro-type"><option value="wash">Milnor Waschmaschine</option><option value="dry">Trockner</option><option value="comp">Kompressor 2-Wochen</option><option value="annual">Kompressor umfangreiche Wartung</option></select></div><div class="field"><label for="retro-machine">Maschine</label><select id="retro-machine"><option>1</option><option>2</option><option>3</option><option>4</option></select></div><div class="field"><label for="retro-date">Durchführungsdatum</label><input type="date" id="retro-date" value="2026-11-04"></div><div class="field"><label for="retro-time">Uhrzeit</label><input type="time" id="retro-time" value="08:00"></div><div class="field" style="grid-column:1/-1"><label for="retro-name">Techniker</label><input id="retro-name" placeholder="Name eingeben"></div></div><div style="margin-top:20px"><button class="button primary" id="retro-next">Prüfpunkte öffnen →</button></div></div></section>
  <section id="view-dguv" class="view"><div class="hero"><div><div class="eyebrow">Prüfmanagement</div><h1>DGUV V3 Prüfungen</h1><p>Gerätebestand, Prüffälligkeiten und zugehörige Messprotokolle – übersichtlich dokumentiert.</p></div><button class="button subtle" data-action="dguv">Gerätebestand ansehen</button></div><div class="metric-grid" style="margin-bottom:20px"><div class="metric"><div class="metric-top">Erfasste Geräte</div><strong id="dguv-total">–</strong></div><div class="metric"><div class="metric-top">Geprüft</div><strong id="dguv-completed">–</strong></div><div class="metric"><div class="metric-top">Bald fällig</div><strong id="dguv-due">–</strong></div><div class="metric"><div class="metric-top">Dokumente</div><strong id="dguv-attachments">–</strong></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Gerät</th><th>Inventarnr.</th><th>Standort</th><th>Fällig</th><th>Status</th><th>Aktion</th></tr></thead><tbody id="dguv-body"></tbody></table></div></section>
- <section id="view-history" class="view"><div class="hero"><div><div class="eyebrow">Archiv und Dokumentation</div><h1>Gespeicherte Protokolle</h1><p>Alle Wartungsnachweise inklusive Checklisten, Fotos und Unterschriften im Blick.</p></div><button class="button subtle" id="cloud-backup" title="Freigabe nach Prüfung der Firebase-Zugriffsregeln" disabled>Cloud-Sicherung nach Sicherheitsprüfung</button></div><div class="toolbar"><input class="search" id="history-search" placeholder="⌕  Protokoll, Anlage oder Techniker suchen ..."><select class="select" id="history-filter"><option value="all">Alle Kategorien</option><option value="Waschmaschine">Waschmaschinen</option><option value="Trockner">Trockner</option><option value="Kompressor">Kompressoren</option></select><button class="button subtle" id="reset-filter">Zurücksetzen</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Protokoll</th><th>Maschine</th><th>Datum</th><th>Techniker</th><th>Ergebnis</th><th>Aktion</th></tr></thead><tbody id="history-body"></tbody></table></div><p class="muted" style="margin-top:15px">Die bisherigen echten Protokolle werden hier im Entwurf bewusst nicht angezeigt oder bearbeitet.</p></section>
+ <section id="view-history" class="view"><div class="hero"><div><div class="eyebrow">Archiv und Dokumentation</div><h1>Gespeicherte Protokolle</h1><p>Alle Wartungsnachweise inklusive Checklisten, Fotos und Unterschriften im Blick.</p></div><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="button subtle" id="cloud-sources">Datenquellen prüfen</button><button class="button subtle" id="cloud-backup" title="Freigabe nach Prüfung der Firebase-Zugriffsregeln" disabled>Cloud-Sicherung nach Sicherheitsprüfung</button></div></div><div class="toolbar"><input class="search" id="history-search" placeholder="⌕  Protokoll, Anlage oder Techniker suchen ..."><select class="select" id="history-filter"><option value="all">Alle Kategorien</option><option value="Waschmaschine">Waschmaschinen</option><option value="Trockner">Trockner</option><option value="Kompressor">Kompressoren</option></select><button class="button subtle" id="reset-filter">Zurücksetzen</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Protokoll</th><th>Maschine</th><th>Datum</th><th>Techniker</th><th>Ergebnis</th><th>Aktion</th></tr></thead><tbody id="history-body"></tbody></table></div><p class="muted" style="margin-top:15px">Historische Protokolle werden aus den verfügbaren Firebase-Sammlungen zusammengeführt. Bei fehlenden Berechtigungen wird der Bestand als unvollständig gekennzeichnet.</p></section>
  <section id="view-form" class="view"><div class="hero"><div><div class="eyebrow">Digitale Wartung</div><h1 id="form-title">Wartungsprotokoll</h1><p>Prüfpunkte, Fotos und Unterschrift werden zusammen als Protokoll gespeichert. Speichern ist erst bei bestätigter Cloud-Verbindung möglich.</p></div><button class="button subtle" data-page="dashboard">← Übersicht</button></div><div class="form-machine-banner" id="form-machine-banner"><img id="form-machine-photo" alt="Originalaufnahme der Maschine"><div><span>ECB SERVICE</span><strong id="form-machine-photo-title">Digitale Wartung</strong></div></div><div class="panel form-panel"><div class="field-grid"><div class="field"><label for="form-machine">Anlage</label><select id="form-machine"></select></div><div class="field"><label for="form-name">Techniker</label><input id="form-name" placeholder="Name des Technikers"></div><div class="field"><label for="form-runtime">Betriebsstunden (optional)</label><input id="form-runtime" type="text" inputmode="decimal" placeholder="Aktueller Betriebsstundenzähler"></div></div><h3 style="margin:23px 0 5px">Prüf- und Wartungspunkte</h3><p class="muted" style="margin:0 0 8px">Bitte je Prüfpunkt OK oder Mangel auswählen.</p><div id="checklist"></div><div class="field" style="margin-top:18px"><label for="form-notes">Bemerkungen</label><textarea id="form-notes" placeholder="Feststellungen und zusätzliche Hinweise"></textarea></div><div class="field" style="margin-top:15px"><label for="cloud-photo">Dokumentationsfotos (werden im Originalprotokoll gespeichert)</label><input id="cloud-photo" type="file" accept="image/*" multiple></div><div id="photo-names" class="muted" style="margin-top:6px"></div><div class="field" style="margin-top:15px"><label>Unterschrift</label><canvas id="signature" width="730" height="170" aria-label="Hier mit dem Finger unterschreiben" style="touch-action:none !important;-ms-touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;display:block;width:100%;height:170px;border:2px solid #b5d399;border-radius:13px;background:#fff;cursor:crosshair"></canvas><small style="color:#54813b;font-size:11px">Mit dem Finger im weißen Feld unterschreiben. Die Seite bleibt dabei stehen.</small><button class="link" id="clear-sign" style="align-self:flex-end">Unterschrift löschen</button></div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px"><button class="button primary" id="save-protocol">✓ Protokoll in Firebase speichern</button><button class="button subtle" data-page="dashboard">Abbrechen</button></div></div></section>
  <section id="view-preview" class="view"><div class="hero"><div><div class="eyebrow">Protokollvorschau</div><h1>Digitales Wartungsprotokoll</h1><p>ECB-Protokoll mit Prüfpunkten, Fotos und Unterschrift – direkt aus der Cloud.</p></div><button class="button subtle" data-page="history">← Archiv</button></div><div class="panel form-panel" id="report-content"></div><div style="margin-top:16px"><button class="button primary" id="print-report">PDF mit Bildern und Unterschrift herunterladen</button></div></section>
  <div class="footer-note">© E.C.B. Reinigungssysteme GmbH · Digitales Wartungssystem</div>
@@ -375,6 +375,13 @@ function cloudLoadError(where,e){cloudError=where+': '+(e?.message||String(e));c
 window.ECB_ACCEPT_SNAPSHOT=(docs,fromCache)=>{history=docs.map(d=>normalizeProtocol(d.id,d.data)).sort((a,b)=>dateValue(b)-dateValue(a));cloudProtocolsReady=!fromCache;cloudState(cloudProtocolsReady?'Firebase verbunden':history.length?'Teilbestand historischer Protokolle geladen':'Firebase-Abgleich läuft',cloudProtocolsReady?`${history.length} Protokolle geladen`:(history.length?`Mindestens ${history.length} Protokolle geladen; weitere Quellen nicht bestätigt`:'Warte auf bestätigte Serverdaten'),false);renderHistory();renderCalendar();};
 window.ECB_ACCEPT_DGUV=(docs,fromCache)=>{dguv=docs.map(d=>normalizeDguv(d.id,d.data));cloudDguvReady=!fromCache;cloudState(cloudProtocolsReady&&cloudDguvReady?'Firebase live synchronisiert':'Firebase wird geladen',`${history.length} Protokolle · ${dguv.length} DGUV-Geräte`,false);renderDguv();};
 window.ECB_CLOUD_ERROR=cloudLoadError;
+window.ECB_SOURCES_REPORT=()=>window.ECB_GET_SOURCE_STATUS?.();
+document.getElementById('cloud-sources').addEventListener('click',()=>{
+ const x=window.ECB_SOURCES_REPORT?.();
+ if(!x)return toast('Firebase-Verbindung noch nicht bereit.');
+ const row=r=>`<div class="due-row"><div><b>${esc(r.source)}</b><small>${esc(r.status)}</small></div><div class="due-right"><b>${r.records===null?'–':r.records}</b><small>Dokumente</small></div></div>`;
+ openModal('Firebase-Datenquellen','Diese Ansicht liest nur den Status und verändert keine Daten.',`<h3>Wartungsprotokolle</h3>${x.protocols.map(row).join('')}<h3 style="margin-top:18px">DGUV-Geräte</h3>${x.devices.map(row).join('')}`);
+});
 let toastTimer;function toast(s){clearTimeout(toastTimer);const box=document.getElementById('toast');box.textContent=s;box.classList.add('show');toastTimer=setTimeout(()=>box.classList.remove('show'),3500)};
 document.getElementById('auth-form').addEventListener('submit',async e=>{
  e.preventDefault();const btn=document.getElementById('auth-submit');btn.disabled=true;
@@ -401,6 +408,7 @@ try {
  const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
  const protocols=collection(db,'artifacts','ecb-maintenance-live','public','data','protocols');
  const devices=collection(db,'artifacts','ecb-maintenance-live','public','data','dguv_devices');
+ const saveProtocols=collection(db,'ecb_protocols'); // Legacy production collection; new records must stay visible to old clients.
  // Additional read-only historical Firestore collections verified / suspected from the Firebase console.
  const protocolSources=[
   {name:'ecb_protocols',ref:collection(db,'ecb_protocols')},
@@ -415,21 +423,57 @@ try {
  ];
  const stops=[],protocolBySource=new Map(),deviceBySource=new Map();
  function combine(sources,store){
-  const results=new Map();
+  const records=new Map();
   for(const source of sources){
-   for(const row of store.get(source.name)?.docs||[]){
-    const key=String(row.data?.id||row.id||'').trim()||source.name+':'+row.id;
-    const score=(Array.isArray(row.data?.photos)?row.data.photos.length:0)*4
-      +(row.data?.signature?5:0)+(Array.isArray(row.data?.points)?row.data.points.length:0)
-      +(row.data?.remarks?1:0);
-    if(!results.has(key)||score>results.get(key).score)results.set(key,{row,score});
-   }
+    for(const row of store.get(source.name)?.docs||[]){
+      const logicalId=String(row.data?.id||'').trim();
+      // Never equate unrelated auto-generated Firestore document IDs across collections.
+      const key=logicalId
+        ? logicalId+'|'+String(row.data?.machine||'').trim().toLowerCase()+'|'+String(row.data?.date||'').trim()
+        : source.name+':'+row.id;
+      if(!records.has(key)){
+        records.set(key,{id:row.id,data:{...row.data},source:source.name});
+        continue;
+      }
+      const existing=records.get(key);
+      // All merges are in RAM. NEVER write combined data back into old documents.
+      for(const [field,value] of Object.entries(row.data||{})){
+        if((existing.data[field]===undefined||existing.data[field]===null||existing.data[field]==='')&&value!==undefined){
+          existing.data[field]=value;
+        }
+      }
+      // Preserve photos + signature even if one historical copy is incomplete.
+      const images=[...(Array.isArray(existing.data.photos)?existing.data.photos:[]),...(Array.isArray(row.data?.photos)?row.data.photos:[])];
+      const photoKeys=new Set();
+      existing.data.photos=images.filter(photo=>{
+        const key=typeof photo==='string'?photo:JSON.stringify(photo);
+        if(photoKeys.has(key))return false;
+        photoKeys.add(key);return true;
+      });
+      if(!existing.data.signature&&row.data?.signature)existing.data.signature=row.data.signature;
+      if((row.data?.points?.length||0)>(existing.data.points?.length||0))existing.data.points=row.data.points;
+      if(!existing.data.remarks&&row.data?.remarks)existing.data.remarks=row.data.remarks;
+    }
   }
-  return {docs:Array.from(results.values(),x=>x.row),
+  return {
+    docs:Array.from(records.values(),r=>({id:r.id,data:r.data})),
     complete:sources.every(source=>store.get(source.name)?.ready===true),
-    errors:sources.filter(source=>store.get(source.name)?.error).map(source=>source.name)};
- }
- function redrawProtocols(){
+    errors:sources.filter(source=>store.get(source.name)?.error).map(source=>source.name)
+  };
+}
+function sourceDiagnostics(){
+  const group=(sources,store)=>sources.map(source=>{
+    const state=store.get(source.name);
+    return {
+      source:source.name,
+      status:!state?'Ausstehend':state.error?'Fehler ('+state.error+')':state.ready?'Server bestätigt':'Nur Cache',
+      records:state?.docs?.length??null
+    };
+  });
+  return {protocols:group(protocolSources,protocolBySource),devices:group(deviceSources,deviceBySource)};
+}
+window.ECB_GET_SOURCE_STATUS=sourceDiagnostics;
+function redrawProtocols(){
   const state=combine(protocolSources,protocolBySource);
   window.ECB_ACCEPT_SNAPSHOT(state.docs,!state.complete);
   if(state.errors.length)window.ECB_CLOUD_ERROR('Protokolle: unvollständiger Datenzugriff',new Error('Quellen: '+state.errors.join(', ')));
@@ -492,10 +536,20 @@ try {
    document.getElementById('auth-email').textContent=sessionStorage.getItem('ecb_current_fullname')||user.displayName||'Angemeldet';
    window.ECB_SAVE=async protocol=>{
      if(!navigator.onLine)throw Error('Offline: Speichern nicht möglich');
-     const reference=doc(protocols),record={...protocol,id:reference.id};
+     const reference=doc(saveProtocols);
+     const newNumber='ECB-'+new Date().toISOString().replace(/\D/g,'').slice(0,14)+'-'+reference.id.slice(0,5).toUpperCase();
+     const record={...protocol,id:newNumber};
      await setDoc(reference,record);
-     if(!(await getDocFromServer(reference)).exists())throw Error('Firestore hat die Speicherung nicht bestätigt.');
-     return reference.id;
+     const saved=await getDocFromServer(reference);
+     if(!saved.exists())throw Error('Firestore hat die Speicherung nicht bestätigt.');
+     const data=saved.data();
+     if(data.id!==record.id||data.machine!==record.machine||
+        !Array.isArray(data.photos)||data.photos.length!==record.photos.length||
+        !Array.isArray(data.points)||data.points.length!==record.points.length||
+        data.signature!==record.signature){
+       throw Error('Protokoll wurde nicht vollständig aus Firebase zurückgelesen. Bitte keinesfalls erneut ohne Prüfung speichern.');
+     }
+     return record.id;
    };
    listen(protocolSources,protocolBySource,redrawProtocols);
    listen(deviceSources,deviceBySource,redrawDevices);
