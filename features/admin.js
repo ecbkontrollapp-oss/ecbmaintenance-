@@ -34,6 +34,7 @@
    const alert=$('change-pwd-warning');
    if(alert)alert.textContent=mustChangePassword?'Sicherheitsprüfung: Bitte ändere jetzt dein temporäres Passwort. Bis dahin bleiben Protokolle und Wartungen gesperrt.':'Du kannst dein persönliches Passwort hier selbst ändern.';
    if(loggedIn&&mustChangePassword&&typeof goto==='function')goto('account');
+   if(admin&&!mustChangePassword)renderArchives();
    if(!admin&&document.getElementById('view-admin')?.classList.contains('active')&&typeof goto==='function')goto('dashboard');
  }
  window.ECB_UI_ADMIN=()=>admin&&!mustChangePassword;
@@ -58,6 +59,7 @@
      '<button class="button primary" type="submit" id="email-confirm-button">PDF per E-Mail versenden</button>'+
      '<p id="email-protocol-status" role="status" class="muted"></p></form>');
  };
+ $('send-current-report').addEventListener('click',()=>{if(typeof previewP!=='undefined'&&previewP)sendButton(previewP.id);});
  $('history-body').addEventListener('click',event=>{
    const mail=event.target.closest('[data-email-protocol]');
    if(mail){sendButton(mail.dataset.emailProtocol);return;}
