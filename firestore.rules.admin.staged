@@ -1,0 +1,67 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function hasProfile() {
+      return request.auth != null
+        && exists(/databases/$(database)/documents/ecb_staff_profiles/$(request.auth.uid));
+    }
+    function staff() {
+      return hasProfile()
+        && request.auth.token.ecbStaff == true
+        && get(/databases/$(database)/documents/ecb_staff_profiles/$(request.auth.uid)).data.disabled == false
+        && get(/databases/$(database)/documents/ecb_staff_profiles/$(request.auth.uid)).data.mustChangePassword == false;
+    }
+    function admin() {
+      return staff() && request.auth.token.ecbAdmin == true;
+    }
+    match /ecb_staff_profiles/{uid} {
+      allow get: if request.auth != null && request.auth.uid == uid
+        || admin();
+      allow list: if admin();
+      // Profiles are managed exclusively by verified Cloud Functions.
+      allow create, update, delete: if false;
+    }
+    match /ecb_protocols/{id} {
+      allow read: if staff();
+      allow create: if staff() && request.resource.data.id is string
+        && request.resource.data.machine is string
+        && request.resource.data.photos is list
+        && request.resource.data.points is list
+        && request.resource.data.signature is string;
+      // Privileged archival uses server-side Cloud Functions. No browser deletes.
+      allow update, delete: if false;
+    }
+    match /ecb_archived_protocols/{archiveId} {
+      allow read: if staff();
+      allow create, update, delete: if false;
+    }
+    match /ecb_dguv_devices/{id} {
+      allow read: if staff();
+      allow create, update, delete: if false;
+    }
+    match /dguv_devices/{id} {
+      allow read: if staff();
+      allow create, update, delete: if false;
+    }
+    match /artifacts/{appId}/public/data/{collectionId}/{id} {
+      allow read: if staff() && (appId == 'ecb-maintenance' || appId == 'ecb-maintenance-live')
+        && (collectionId == 'protocols' || collectionId == 'dguv_devices');
+      // Existing legacy protocols must remain untouched by clients during migration.
+      allow create, update, delete: if false;
+    }
+    match /ecb_mail_jobs/{jobId} {
+      allow read: if admin() || (staff() && resource.data.actorUid == request.auth.uid);
+      allow create, update, delete: if false;
+    }
+    match /ecb_mail_locks/{id} {
+      allow read, write: if false;
+    }
+    // Legacy username/password documents may contain credentials.
+    match /ecb_users/{id} {
+      allow read, write: if false;
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
