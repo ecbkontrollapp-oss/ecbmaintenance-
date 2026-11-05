@@ -32,6 +32,10 @@ jobs:
           node --check admin/ecb-admin.mjs
       - name: Check JavaScript and synthetic historical Firestore data
         run: node --test tools/test-staged.mjs
+      - name: Install test-only server dependencies
+        run: npm install --prefix functions --no-audit --no-fund
+      - name: Generate and inspect PDF with original logo, photo and signature
+        run: npm test --prefix functions
 
       - name: Parse Firebase privileged functions without running or deploying
         run: |
