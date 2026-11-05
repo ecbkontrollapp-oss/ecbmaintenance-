@@ -113,7 +113,7 @@ test('admin UI is connected without exposing a client-side privileged write',()=
  assert.ok(admin.includes("window.ECB_ARCHIVED_KEYS=new Set"));
  assert.ok(admin.includes("adminCreateUser"));
  assert.ok(admin.includes("changeMyPassword"));
- assert.ok(admin.includes("sendProtocolEmail"));
+ assert.ok(admin.includes("window.ECB_FREE_MAIL.send"));
  assert.ok(admin.includes("adminArchiveProtocol"));
  assert.ok(admin.includes("adminRestoreProtocol"));
  assert.ok(!/\b(?:setDoc|deleteDoc|updateDoc|addDoc)\s*\(/.test(admin));
