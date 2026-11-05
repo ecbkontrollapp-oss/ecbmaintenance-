@@ -131,7 +131,7 @@ async function readProtocol(id){
  for(const coll of sources){
    const snaps=await coll.where('id','==',id).limit(5).get();
    for(const doc of snaps.docs)found.push({id:doc.id,...doc.data()});
-   if(!found.length){const direct=await coll.doc(id).get();if(direct.exists)found.push({id:direct.id,...direct.data()});}
+   if(snaps.empty){const direct=await coll.doc(id).get();if(direct.exists)found.push({id:direct.id,...direct.data()});}
  }
  if(!found.length)throw new HttpsError('not-found','Protokoll nicht in Firebase gefunden.');
  const keys=new Set(found.map(p=>archiveKey(p)));
