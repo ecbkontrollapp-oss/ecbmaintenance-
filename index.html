@@ -402,7 +402,7 @@ renderHistory();renderDguv();renderCalendar();
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getFirestore,collection,onSnapshot,doc,setDoc,getDocFromServer} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-import {getAuth,onAuthStateChanged,signInWithCustomToken,signOut} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 const config={apiKey:'AIzaSyDAYbTwQd8aDeTSHzuxWfEVon6SHIVRB5k',authDomain:'ecb-maintenance.firebaseapp.com',projectId:'ecb-maintenance',appId:'1:229926423123:web:a309c14c708fc886c62d4a6'};
 try {
  const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
@@ -494,24 +494,31 @@ function redrawProtocols(){
  }
 
  const teardown=()=>{for(const stop of stops.splice(0)){try{stop()}catch{}}protocolBySource.clear();deviceBySource.clear();window.ECB_SAVE=null;};
- // A secure HTTPS endpoint validates original ECB account credentials server-side and
- // issues a time-limited Firebase custom token. Never publish password lists in GitHub.
+
+ // The ECB login form uses the historical username and password.
+ // Firebase Authentication is only an invisible session provider. A one-time
+ // admin migration creates the corresponding accounts with the SAME passwords.
+ // This avoids unsafe password lists in the published JavaScript and
+ // eliminates a separate login screen, API endpoint, or Cloud Functions bill.
+ async function emailAliasFor(username){
+   const normalized=String(username||'').normalize('NFKC').trim().toLocaleLowerCase('de-DE');
+   if(normalized.length<1||normalized.length>80)throw new Error('Bitte gültigen Benutzernamen eingeben.');
+   const bytes=new TextEncoder().encode(normalized);
+   const digest=new Uint8Array(await crypto.subtle.digest('SHA-256',bytes));
+   return 'u'+Array.from(digest,b=>b.toString(16).padStart(2,'0')).join('')+'@accounts.ecb.invalid';
+ }
  window.ECB_LOGIN=async(username,password)=>{
-   const endpoint=String(window.ECB_LEGACY_AUTH_ENDPOINT||'').trim();
-   if(!/^https:\/\//.test(endpoint))throw new Error('Der Benutzer-Anmeldedienst ist noch nicht eingerichtet. Es wurden keine Zugangsdaten übertragen.');
-   const ctrl=new AbortController();
-   const timer=setTimeout(()=>ctrl.abort(),12000);
-   let response;
-   try {
-     response=await fetch(endpoint,{method:'POST',mode:'cors',redirect:'error',credentials:'omit',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify({username,password}),signal:ctrl.signal});
-   }catch(e){throw new Error('Anmeldedienst nicht erreichbar. Bitte Verbindung prüfen.');}
-   finally{clearTimeout(timer);}
-   if(!response.ok)throw new Error(response.status===401||response.status===403?'Benutzername oder Passwort ungültig.':'Anmeldung nicht möglich. Bitte später erneut versuchen.');
-   const result=await response.json();
-   if(typeof result.token!=='string'||!result.token)throw new Error('Ungültige Anmeldeantwort.');
-   await signInWithCustomToken(auth,result.token);
-   sessionStorage.setItem('ecb_current_user',username);
-   sessionStorage.setItem('ecb_current_fullname',String(result.displayName||username));
+   if(!password)throw new Error('Bitte Passwort eingeben.');
+   const email=await emailAliasFor(username);
+   try{
+     const response=await signInWithEmailAndPassword(auth,email,password);
+     if(!response.user)throw Error('Anmeldung wurde nicht bestätigt.');
+     sessionStorage.setItem('ecb_current_user',String(username).trim());
+     sessionStorage.setItem('ecb_current_fullname',response.user.displayName||String(username).trim());
+   }catch(e){
+     if(String(e?.code||'').includes('auth/'))throw new Error('Benutzername oder Passwort nicht erkannt. Falls dein altes Konto noch nicht übernommen wurde, ist die Migration erforderlich.');
+     throw e;
+   }
  };
  window.ECB_LOGOUT=async()=>{
    sessionStorage.removeItem('ecb_current_user');sessionStorage.removeItem('ecb_current_fullname');
