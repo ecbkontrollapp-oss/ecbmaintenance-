@@ -421,9 +421,21 @@ async function saveProtocol(){
    const d=new Date(when+'T'+(time||'12:00'));if(isNaN(d.getTime()))throw new Error('Ungültiges Datum');
    const p={category:machines[currentType].title,type:machines[currentType].short,machine:document.getElementById('form-machine').value,employee:name,runtime:document.getElementById('form-runtime').value.trim(),date:d.toLocaleDateString('de-DE'),timestamp:d.toISOString(),points:pts,remarks:document.getElementById('form-notes').value,photos,signature:document.getElementById('signature').toDataURL('image/png')};
    if(JSON.stringify(p).length>900000)throw new Error('Fotos zu groß für Firestore (1-MB-Dokumentgrenze). Bitte weniger Bilder auswählen oder kleinere Fotos verwenden. Nichts wurde gespeichert.');
-   await window.ECB_SAVE(p);
-   toast('Wartungsprotokoll in Firebase gespeichert.');
+   p.id=await window.ECB_SAVE(p);
+   // Sending only after confirmed Firestore server write; no duplicate save on mail failure.
+   let mailNotice='';
+   if(window.ECB_FREE_MAIL_ENDPOINT&&window.ECB_FREE_MAIL){
+     try{
+       await window.ECB_FREE_MAIL.send({
+         mode:'automatic',protocol:p,sourcePath:window.ECB_LAST_SAVED_PATH,
+         recipient:'pb@ecb-system.de'
+       });
+     }catch(mailError){mailNotice='Wartung sicher gespeichert, aber E-Mail nicht bestätigt: '+String(mailError.message||mailError);}
+   }else{
+     mailNotice='Wartung gespeichert. Kostenloser E-Mail-Dienst noch nicht aktiviert.';
+   }
    goto('history');
+   if(mailNotice)alert(mailNotice);else toast('Wartung gespeichert und E-Mail an pb@ecb-system.de bestätigt.');
  }catch(e){console.error(e);alert('Speichern fehlgeschlagen. Es wurde kein erfolgreiches Speichern bestätigt.\n'+(e.message||e));}
  finally{saveInProgress=false;button.disabled=false;button.textContent='✓ Protokoll in Firebase speichern';}
 }
@@ -527,7 +539,9 @@ try {
         ? logicalId+'|'+String(row.data?.machine||'').trim().toLowerCase()+'|'+String(row.data?.date||'').trim()
         : source.name+':'+row.id;
       if(!records.has(key)){
-        records.set(key,{id:row.id,data:{...row.data},source:source.name});
+        const readPath=source.name==='ecb_protocols'?'ecb_protocols/'+row.id:
+          source.name.startsWith('artifacts/')?'artifacts/'+source.name.slice('artifacts/'.length)+'/public/data/protocols/'+row.id:null;
+        records.set(key,{id:row.id,data:{...row.data,__firestorePath:readPath},source:source.name});
         continue;
       }
       const existing=records.get(key);
@@ -686,6 +700,7 @@ function redrawProtocols(){
         data.signature!==record.signature){
        throw Error('Protokoll wurde nicht vollständig aus Firebase zurückgelesen. Bitte keinesfalls erneut ohne Prüfung speichern.');
      }
+     window.ECB_LAST_SAVED_PATH='ecb_protocols/'+reference.id;
      return record.id;
    };
    listen(protocolSources,protocolBySource,redrawProtocols);
@@ -693,5 +708,6 @@ function redrawProtocols(){
  },err=>window.ECB_CLOUD_ERROR('Anmeldung',err));
 } catch(e){window.ECB_CLOUD_ERROR('Firebase',e);}
 </script>
+<script type="module" src="./features/free-mail-client.mjs"></script>
 <script type="module" src="./admin/ecb-admin.mjs"></script>
 </body></html>
