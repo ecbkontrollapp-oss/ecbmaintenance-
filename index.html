@@ -370,7 +370,28 @@ function openModal(title,subtitle,html){document.getElementById('modal-title').t
 
 document.querySelectorAll('[data-action="dguv"]').forEach(b=>b.onclick=()=>openModal('DGUV V3 – Bestand','Der bestehende Gerätebestand wird direkt aus Firebase geladen. Neue Geräte werden nach Prüfung der bestehenden Datenstruktur freigeschaltet.','<p>Alte Geräte und Prüfdokumente bleiben unverändert. Bitte zuerst den Datenbestand überprüfen.</p>'));
 document.getElementById('dguv-body').addEventListener('click',e=>{const b=e.target.closest('[data-dguv-index]');if(!b)return;const p=dguv[Number(b.dataset.dguvIndex)];if(!p)return;const raw=p.raw;const docs=[...(Array.isArray(raw.documents)?raw.documents:[]),...(Array.isArray(raw.attachments)?raw.attachments:[])];const linkHtml=docs.map((v,i)=>{const u=typeof v==='string'?v:v.url||v.dataUrl||'';return /^https:\/\//.test(u)?`<p><a href="${esc(u)}" target="_blank" rel="noopener">Dokument ${i+1} öffnen</a></p>`:u.startsWith('data:application/pdf;base64,')?`<p><a href="${esc(u)}" download="DGUV_Dokument_${i+1}.pdf">Dokument ${i+1} herunterladen</a></p>`:''}).join('');openModal(p.name,'Gespeicherter DGUV-Datensatz',`<div class="field-grid"><p><b>Inventar:</b> ${esc(p.inventory)}</p><p><b>Standort:</b> ${esc(p.location)}</p><p><b>Fällig:</b> ${esc(p.due)}</p><p><b>Status:</b> ${esc(p.status)}</p></div>${linkHtml||'<p>Keine PDF-Anlagen direkt im Dokument referenziert.</p>'}`)});
-document.getElementById('cloud-backup').onclick=()=>{if(!cloudProtocolsReady){toast('Cloud ist noch nicht geladen. Export nicht möglich.');return}const data=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),source:'ecb-maintenance',protocols:history,dguv_devices:dguv.map(x=>({id:x.id,...x.raw}))},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(data);a.download='ECB_Firebase_Protokolle_Export_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
+document.getElementById('cloud-backup').onclick=()=>{
+  const sources=window.ECB_SOURCES_REPORT?.()||null;
+  const allStatuses=[...(sources?.protocols||[]),...(sources?.devices||[])];
+  const sourcesConfirmed=allStatuses.length>0&&allStatuses.every(row=>row.status==='Server bestätigt');
+  const complete=Boolean(cloudProtocolsReady&&cloudDguvReady&&sourcesConfirmed);
+  if(history.length===0&&dguv.length===0){toast('Keine geladenen Protokolle oder DGUV-Geräte für einen Export vorhanden.');return;}
+  if(!complete&&!window.confirm('Achtung: Es sind noch nicht alle Firebase-Quellen bestätigt. Nur den aktuell geladenen TEILBESTAND exportieren?'))return;
+  const payload={
+    exportedAt:new Date().toISOString(),
+    source:'ecb-maintenance',
+    completeKnownSources:complete,
+    warning:complete?'Alle konfigurierten Quellen serverseitig bestätigt. Keine Garantie für unbekannte Bestände oder lokale Daten anderer Geräte.':'UNVOLLSTÄNDIGER CLOUD-ABGLEICH: Dieser Export enthält möglicherweise nicht alle alten Protokolle.',
+    sourceStatus:sources,
+    counts:{protocols:history.length,dguvDevices:dguv.length},
+    protocols:history,
+    dguv_devices:dguv.map(x=>({id:x.id,...x.raw}))
+  };
+  const data=new Blob([JSON.stringify(payload,null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(data);
+  a.download='ECB_Firebase_'+(complete?'Bestaetigte_Quellen':'TEILBESTAND')+'_'+new Date().toISOString().slice(0,10)+'.json';
+  a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000);
+};
 function cloudLoadError(where,e){cloudError=where+': '+(e?.message||String(e));cloudState('Firebase-Verbindung fehlgeschlagen',cloudError,true);toast('Cloud-Fehler: '+where);}
 window.ECB_ACCEPT_SNAPSHOT=(docs,fromCache)=>{history=docs.map(d=>normalizeProtocol(d.id,d.data)).sort((a,b)=>dateValue(b)-dateValue(a));cloudProtocolsReady=!fromCache;cloudState(cloudProtocolsReady?'Firebase verbunden':history.length?'Teilbestand historischer Protokolle geladen':'Firebase-Abgleich läuft',cloudProtocolsReady?`${history.length} Protokolle geladen`:(history.length?`Mindestens ${history.length} Protokolle geladen; weitere Quellen nicht bestätigt`:'Warte auf bestätigte Serverdaten'),false);renderHistory();renderCalendar();};
 window.ECB_ACCEPT_DGUV=(docs,fromCache)=>{dguv=docs.map(d=>normalizeDguv(d.id,d.data));cloudDguvReady=!fromCache;cloudState(cloudProtocolsReady&&cloudDguvReady?'Firebase live synchronisiert':'Firebase wird geladen',`${history.length} Protokolle · ${dguv.length} DGUV-Geräte`,false);renderDguv();};
@@ -488,7 +509,7 @@ function redrawProtocols(){
    const stop=onSnapshot(source.ref,{includeMetadataChanges:true},snap=>{
     store.set(source.name,{ready:!snap.metadata.fromCache,docs:snap.docs.map(d=>({id:d.id,data:d.data()})),error:null});
     redraw();
-   },err=>{store.set(source.name,{ready:false,docs:[],error:err?.code||'unknown'});redraw();});
+   },err=>{const previous=store.get(source.name);store.set(source.name,{ready:false,docs:previous?.docs||[],error:err?.code||'unknown'});redraw();});
    stops.push(stop);
   }
  }
