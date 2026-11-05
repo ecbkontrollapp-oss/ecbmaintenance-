@@ -523,9 +523,20 @@ renderHistory();renderDguv();renderCalendar();
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getFirestore,collection,onSnapshot,doc,setDoc,getDocFromServer} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
 import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import {getFunctions,httpsCallable} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-functions.js';
 const config={apiKey:'AIzaSyDAYbTwQd8aDeTSHzuxWtEVon6SHIVRB5k',authDomain:'ecb-maintenance.firebaseapp.com',projectId:'ecb-maintenance',appId:'1:229926423123:web:a309c14c708fc886c62d4a6'};
 try {
  const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
+ const cloudFunctions=getFunctions(app,'europe-west3');
+ window.ECB_FUNCTIONS=Object.fromEntries([
+   'adminCreateUser','adminListUsers','adminSetUserActive','adminResetTemporaryPassword',
+   'changeMyPassword','adminArchiveProtocol','adminRestoreProtocol','sendProtocolEmail'
+ ].map(name=>[name,httpsCallable(cloudFunctions,name,{timeout:90000})]));
+ let archivedRecords=[];
+ window.ECB_ARCHIVED_ITEMS=()=>archivedRecords.slice();
+ window.ECB_IS_ARCHIVED=p=>archivedRecords.some(a=>a.key===String(p.id||'')+'|'+String(p.machine||'').trim().toLowerCase()+'|'+String(p.date||'').trim());
+ const notifyRole=detail=>window.dispatchEvent(new CustomEvent('ecb-auth-state',{detail}));
+ const notifyArchives=()=>window.dispatchEvent(new Event('ecb-archive-changed'));
  const protocols=collection(db,'artifacts','ecb-maintenance-live','public','data','protocols');
  const devices=collection(db,'artifacts','ecb-maintenance-live','public','data','dguv_devices');
  const saveProtocols=collection(db,'ecb_protocols'); // Legacy production collection; new records must stay visible to old clients.
@@ -613,7 +624,7 @@ function redrawProtocols(){
   }
  }
 
- const teardown=()=>{for(const stop of stops.splice(0)){try{stop()}catch{}}protocolBySource.clear();deviceBySource.clear();window.ECB_SAVE=null;};
+ const teardown=()=>{for(const stop of stops.splice(0)){try{stop()}catch{}}protocolBySource.clear();deviceBySource.clear();window.ECB_SAVE=null;archivedRecords=[];notifyArchives();};
 
  // The ECB login form uses the historical username and password.
  // Firebase Authentication is only an invisible session provider. A one-time
@@ -645,9 +656,10 @@ function redrawProtocols(){
    await signOut(auth);
  };
  // Logout above also clears the username session; keep only that handler.
- onAuthStateChanged(auth,user=>{
+ onAuthStateChanged(auth,async user=>{
    teardown();
    if(!user){
+     notifyRole({loggedIn:false,staff:false,admin:false,mustChangePassword:false});
      window.ECB_ACCEPT_SNAPSHOT([],true);window.ECB_ACCEPT_DGUV([],true);document.getElementById('report-content').innerHTML='';document.querySelector('[data-page="dashboard"]')?.click();
      document.body.classList.add('ecb-locked');document.getElementById('auth-panel').style.display='block';
      document.getElementById('auth-identity').style.display='none';
@@ -658,8 +670,42 @@ function redrawProtocols(){
      document.getElementById('cloud-message').classList.remove('live');
      return;
    }
+   let account;
+   try{
+     const token=await user.getIdTokenResult();
+     const profile=await getDocFromServer(doc(db,'ecb_staff_profiles',user.uid));
+     if(!profile.exists())throw Error('Dieses Benutzerkonto wurde noch nicht für die Nutzerverwaltung freigeschaltet. Administrator muss das Profil einmalig einrichten.');
+     const p=profile.data();
+     const staff=token.claims.ecbStaff===true&&p.disabled!==true;
+     const admin=staff&&token.claims.ecbAdmin===true;
+     account={staff,admin,mustChangePassword:p.mustChangePassword===true};
+     if(!staff)throw Error('Dein Konto hat noch keine Mitarbeiterberechtigung.');
+     notifyRole({loggedIn:true,...account});
+     if(account.mustChangePassword){
+       document.body.classList.remove('ecb-locked');
+       document.getElementById('auth-panel').style.display='none';
+       document.getElementById('auth-identity').style.display='flex';
+       document.getElementById('auth-email').textContent=sessionStorage.getItem('ecb_current_fullname')||user.displayName||'Angemeldet';
+       document.getElementById('cloud-pill').textContent='Passwortwechsel erforderlich';
+       return;
+     }
+   }catch(error){
+     notifyRole({loggedIn:true,staff:false,admin:false,mustChangePassword:false});
+     window.ECB_CLOUD_ERROR('Benutzerfreigabe',error);
+     document.getElementById('cloud-pill').textContent='Zugang nicht freigeschaltet';
+     document.getElementById('sync-detail').textContent='Administrator muss das Konto freischalten';
+     document.body.classList.remove('ecb-locked');
+     document.getElementById('auth-panel').style.display='none';
+     document.getElementById('auth-identity').style.display='flex';
+     return;
+   }
    document.body.classList.remove('ecb-locked');document.getElementById('auth-panel').style.display='none';
    document.getElementById('auth-identity').style.display='flex';
+   const archiveStop=onSnapshot(collection(db,'ecb_archived_protocols'),snap=>{
+     archivedRecords=snap.docs.map(item=>({archiveId:item.id,...item.data()}));
+     notifyArchives();
+   },error=>{window.ECB_CLOUD_ERROR('Protokollarchiv',error);});
+   stops.push(archiveStop);
    document.getElementById('auth-email').textContent=sessionStorage.getItem('ecb_current_fullname')||user.displayName||'Angemeldet';
    window.ECB_SAVE=async protocol=>{
      if(!navigator.onLine)throw Error('Offline: Speichern nicht möglich');
