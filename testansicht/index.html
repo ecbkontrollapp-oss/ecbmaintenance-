@@ -543,7 +543,8 @@ function redrawProtocols(){
      sessionStorage.setItem('ecb_current_user',String(username).trim());
      sessionStorage.setItem('ecb_current_fullname',response.user.displayName||String(username).trim());
    }catch(e){
-     if(e?.code==='auth/operation-not-allowed')throw new Error('Firebase Authentication: Die Anmeldemethode E-Mail/Passwort ist noch nicht freigeschaltet. Bitte im Firebase-Projekt ecb-maintenance aktivieren.');
+     if(String(e?.code||'').includes('api-key-not-valid')||e?.code==='auth/invalid-api-key')throw new Error('Firebase-Konfiguration ungültig: Der API-Schlüssel der Web-App wird von Firebase abgelehnt. Bitte den aktuellen apiKey aus Firebase → Projekteinstellungen → Allgemein → Deine Apps → Web-App übernehmen. Dein Passwort ist nicht die Ursache.');
+      if(e?.code==='auth/operation-not-allowed')throw new Error('Firebase Authentication: Die Anmeldemethode E-Mail/Passwort ist noch nicht freigeschaltet. Bitte im Firebase-Projekt ecb-maintenance aktivieren.');
      if(e?.code==='auth/too-many-requests')throw new Error('Zu viele Anmeldeversuche. Bitte den Zugang in Firebase prüfen und später erneut anmelden.');
      if(['auth/invalid-credential','auth/user-not-found','auth/wrong-password','auth/invalid-login-credentials'].includes(e?.code))throw new Error('Dieser Benutzer ist noch nicht als Firebase-Authentication-Konto angelegt oder das neue Passwort stimmt nicht. Der bisherige App-Login wurde nicht automatisch übernommen.');
      if(String(e?.code||'').startsWith('auth/'))throw new Error('Firebase-Anmeldung fehlgeschlagen ('+e.code+'). Bitte Konto und Authentifizierungs-Einstellungen prüfen.');
