@@ -64,3 +64,17 @@ test('staged Firestore rules deny public reads and require staff claims',()=>{
   assert.ok(!/allow\s+read,\s*write:\s*if\s+true/.test(rules));
   assert.ok(rules.includes('match /ecb_users/{userId}'));
 });
+
+
+test('Firestore read errors retain already loaded records for the user',()=>{
+  assert.match(app,/const previous=store\.get\(source\.name\)/);
+  assert.match(app,/docs:previous\?\.docs\|\|\[\]/);
+  assert.doesNotMatch(app,/store\.set\(source\.name,\{ready:false,docs:\[\],error:/);
+});
+test('backup distinguishes verified sources from incomplete historical data',()=>{
+  assert.ok(app.includes('completeKnownSources:complete'));
+  assert.ok(app.includes('sourceStatus:sources'));
+  assert.ok(app.includes('UNVOLLSTÄNDIGER CLOUD-ABGLEICH'));
+  assert.ok(app.includes('TEILBESTAND'));
+  assert.ok(app.includes("allStatuses.every(row=>row.status==='Server bestätigt')"));
+});
