@@ -1,0 +1,19 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "ecb-wartung-free-mail",
+  "main": "src/index.js",
+  "compatibility_date": "2026-11-01",
+  "workers_dev": true,
+  "vars": {
+    "FIREBASE_PROJECT_ID": "ecb-maintenance",
+    "ECB_MAIL_FROM": "ECB Wartung <wartung@ecb-system.de>",
+    "ALLOWED_ORIGIN": "https://ecbkontrollapp-oss.github.io"
+  },
+  "d1_databases": [
+    {
+      "binding": "MAIL_DB",
+      "database_name": "ecb-wartung-mail",
+      "database_id": "REPLACE_WITH_YOUR_D1_DATABASE_ID"
+    }
+  ]
+}
