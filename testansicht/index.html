@@ -411,16 +411,33 @@ document.getElementById('cloud-sources').addEventListener('click',()=>{
 });
 let toastTimer;function toast(s){clearTimeout(toastTimer);const box=document.getElementById('toast');box.textContent=s;box.classList.add('show');toastTimer=setTimeout(()=>box.classList.remove('show'),3500)};
 document.getElementById('auth-form').addEventListener('submit',async e=>{
- e.preventDefault();const btn=document.getElementById('auth-submit');btn.disabled=true;
+ e.preventDefault();
+ const btn=document.getElementById('auth-submit');
+ if(btn.disabled)return;
+ const feedback=document.getElementById('auth-feedback');
  const username=document.getElementById('login-user').value.trim();
  const password=document.getElementById('login-pass').value;
+ btn.disabled=true;
+ btn.textContent='Anmeldung wird geprüft …';
+ feedback.textContent='Verbinde mit Firebase Authentication. Deine Protokolle werden dabei nicht verändert.';
+ let timeoutId;
  try{
-   if(!window.ECB_LOGIN)throw new Error('Anmeldedienst wird gerade geladen. Bitte erneut versuchen.');
-   await window.ECB_LOGIN(username,password);
+   if(!navigator.onLine)throw new Error('Keine Internetverbindung. Bitte WLAN/Mobilfunk prüfen.');
+   if(!window.ECB_LOGIN)throw new Error('Firebase-Anmeldedienst wurde nicht geladen. Bitte die Seite neu öffnen.');
+   await Promise.race([
+     window.ECB_LOGIN(username,password),
+     new Promise((_,reject)=>{timeoutId=setTimeout(()=>reject(new Error('Firebase hat auf die Anmeldung nicht geantwortet. Bitte den Link direkt in Safari öffnen, die Seite aktualisieren und erneut versuchen.')),18000);})
+   ]);
    document.getElementById('login-pass').value='';
-   document.getElementById('auth-feedback').textContent='Angemeldet. Die Cloud wird synchronisiert …';
- }catch(ex){document.getElementById('auth-feedback').textContent=ex?.message||'Anmeldung fehlgeschlagen.';}
- finally{btn.disabled=false;}
+   feedback.textContent='Firebase-Anmeldung bestätigt. Cloud-Abgleich läuft …';
+ }catch(ex){
+   console.warn('ECB Firebase login failed:',ex?.code||'timeout/network',ex?.message||'');
+   feedback.textContent=ex?.message||'Anmeldung fehlgeschlagen. Bitte Seite neu laden.';
+ }finally{
+   if(timeoutId)clearTimeout(timeoutId);
+   btn.disabled=false;
+   btn.textContent='Anmelden';
+ }
 });
 document.getElementById('auth-logout').addEventListener('click',()=>window.ECB_LOGOUT?.());
 renderHistory();renderDguv();renderCalendar();
@@ -584,7 +601,7 @@ function redrawProtocols(){
  const button=document.getElementById('save-protocol');
  if(button){button.disabled=true;button.textContent='Speichern in der Testansicht gesperrt';button.title='Nur lesende Testansicht – keine Änderungen an Firebase';}
  const text=document.getElementById('auth-feedback');
- if(text)text.textContent='Nur autorisierte Firebase-Konten können Originaldaten öffnen. Alte Login-Konten müssen zuvor übernommen worden sein.';
+ if(text)text.textContent='Firebase-Anmeldung ist bereit. Nur autorisierte Konten können auf die gespeicherten Protokolle zugreifen.';
 })();
 </script>
 </body></html>
