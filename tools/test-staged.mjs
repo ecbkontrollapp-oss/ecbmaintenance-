@@ -118,24 +118,25 @@ test('admin UI is connected without exposing a client-side privileged write',()=
  assert.ok(admin.includes("adminRestoreProtocol"));
  assert.ok(!/\b(?:setDoc|deleteDoc|updateDoc|addDoc)\s*\(/.test(admin));
 });
-test('server enforces claims, password-change restriction, mail deduplication and fixed recipient',()=>{
+test('Firebase admin enforces claims and free mail is isolated from paid functions',()=>{
  const fn=readFileSync(new URL('../functions/index.js',import.meta.url),'utf8');
  const pdf=readFileSync(new URL('../functions/pdf.mjs',import.meta.url),'utf8');
- assert.ok(fn.includes("const DESTINATION='pb@ecb-system.de'"));
+ const free=readFileSync(new URL('../free-mail-worker/src/index.js',import.meta.url),'utf8');
+ const client=readFileSync(new URL('../features/free-mail-client.mjs',import.meta.url),'utf8');
  assert.ok(fn.includes("user.customClaims?.ecbAdmin"));
  assert.ok(fn.includes("user.customClaims?.ecbStaff"));
  assert.ok(fn.includes("profile.data()?.mustChangePassword===true"));
  assert.ok(fn.includes("auth.createUser"));
  assert.ok(fn.includes("auth.updateUser(user.uid,{password:newPassword})"));
  assert.ok(fn.includes("randomBytes(24)"));
- assert.ok(fn.includes("changeMyPassword"));
  assert.ok(fn.includes("adminResetTemporaryPassword"));
- assert.ok(fn.includes("ecb_mail_jobs"));
- assert.ok(fn.includes("ecb_mail_locks"));
- assert.ok(fn.includes("ecb_mail_rate"));
- assert.ok(fn.includes("onNewMaintenance=onDocumentCreated"));
- assert.ok(fn.includes("onNewLegacyMaintenance=onDocumentCreated"));
- assert.ok(fn.includes("sendProtocolEmail=onCall"));
+ assert.ok(free.includes("automatic?'pb@ecb-system.de'"));
+ assert.ok(free.includes("api.resend.com/emails"));
+ assert.ok(free.includes("ecb_mail_jobs")===false);
+ assert.ok(free.includes("mail_jobs"));
+ assert.ok(client.includes("window.ECB_FREE_MAIL_ENDPOINT"));
+ assert.ok(!fn.includes("nodemailer"));
+ assert.ok(!fn.includes("onDocumentCreated"));
  assert.ok(!fn.includes("console.log(password)"));
  assert.ok(pdf.includes("signature"));
  assert.ok(pdf.includes("ORIGINALFOTOS"));
