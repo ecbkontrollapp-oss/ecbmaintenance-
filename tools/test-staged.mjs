@@ -98,3 +98,60 @@ test('separate public preview reads Firebase only after login and exposes no wri
     new vm.Script(js);
   }
 });
+
+test('admin UI is connected without exposing a client-side privileged write',()=>{
+ const admin=readFileSync(new URL('../admin/ecb-admin.mjs',import.meta.url),'utf8');
+ assert.ok(app.includes('id="view-admin"'));
+ assert.ok(app.includes('id="ecb-admin-create-user"'));
+ assert.ok(app.includes('id="ecb-password-change-form"'));
+ assert.ok(app.includes('data-ecb-mail'));
+ assert.ok(app.includes('data-ecb-archive'));
+ assert.ok(app.includes('src="./admin/ecb-admin.mjs"'));
+ assert.ok(admin.includes("httpsCallable(funcs,name"));
+ assert.ok(admin.includes("profile.mustChangePassword===true"));
+ assert.ok(admin.includes("window.ECB_ADMIN_ROLE=role"));
+ assert.ok(admin.includes("window.ECB_ARCHIVED_KEYS=new Set"));
+ assert.ok(admin.includes("adminCreateUser"));
+ assert.ok(admin.includes("changeMyPassword"));
+ assert.ok(admin.includes("sendProtocolEmail"));
+ assert.ok(admin.includes("adminArchiveProtocol"));
+ assert.ok(admin.includes("adminRestoreProtocol"));
+ assert.ok(!/\b(?:setDoc|deleteDoc|updateDoc|addDoc)\s*\(/.test(admin));
+});
+test('server enforces claims, password-change restriction, mail deduplication and fixed recipient',()=>{
+ const fn=readFileSync(new URL('../functions/index.js',import.meta.url),'utf8');
+ const pdf=readFileSync(new URL('../functions/pdf.mjs',import.meta.url),'utf8');
+ assert.ok(fn.includes("const DESTINATION='pb@ecb-system.de'"));
+ assert.ok(fn.includes("user.customClaims?.ecbAdmin"));
+ assert.ok(fn.includes("user.customClaims?.ecbStaff"));
+ assert.ok(fn.includes("profile.data()?.mustChangePassword===true"));
+ assert.ok(fn.includes("auth.createUser"));
+ assert.ok(fn.includes("auth.updateUser(user.uid,{password:newPassword})"));
+ assert.ok(fn.includes("randomBytes(24)"));
+ assert.ok(fn.includes("changeMyPassword"));
+ assert.ok(fn.includes("adminResetTemporaryPassword"));
+ assert.ok(fn.includes("ecb_mail_jobs"));
+ assert.ok(fn.includes("ecb_mail_locks"));
+ assert.ok(fn.includes("ecb_mail_rate"));
+ assert.ok(fn.includes("onNewMaintenance=onDocumentCreated"));
+ assert.ok(fn.includes("onNewLegacyMaintenance=onDocumentCreated"));
+ assert.ok(fn.includes("sendProtocolEmail=onCall"));
+ assert.ok(!fn.includes("console.log(password)"));
+ assert.ok(pdf.includes("signature"));
+ assert.ok(pdf.includes("ORIGINALFOTOS"));
+ assert.ok(pdf.includes("ecb-logo.b64"));
+ const logo=Buffer.from(readFileSync(new URL('../functions/assets/ecb-logo.b64',import.meta.url),'utf8').trim(),'base64');
+ assert.ok(logo.length>1000);
+ assert.equal(logo.subarray(0,4).toString('ascii'),'RIFF');
+});
+test('new rules are staged only and protect passwords and legacy protocols',()=>{
+ const rules=readFileSync(new URL('../firestore.rules.admin.staged',import.meta.url),'utf8');
+ const firebase=JSON.parse(readFileSync(new URL('../firebase.json',import.meta.url),'utf8'));
+ assert.equal(firebase.functions.source,'functions');
+ assert.equal(firebase.firestore,undefined,'Do not accidentally deploy unreviewed Firestore rules');
+ assert.ok(rules.includes('request.auth.token.ecbAdmin == true'));
+ assert.ok(rules.includes('mustChangePassword == false'));
+ assert.ok(rules.includes('match /ecb_users/{id}'));
+ assert.ok(rules.includes('allow create, update, delete: if false;'));
+ assert.ok(!/allow\s+read\s*,\s*write\s*:\s*if\s+true/.test(rules));
+});
