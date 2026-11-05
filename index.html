@@ -180,7 +180,7 @@ function normalizeProtocol(id,data){
   p.photos=Array.isArray(p.photos)?p.photos:[];
   p.points=Array.isArray(p.points)?p.points:[];
   p.date=humanDate(p.date||p.timestamp);
-  p.result=p.points.some(x=>!['OK','i.O.','Erledigt','Bestanden'].includes(String(x.status||'').trim()))?'Mangel':'OK';
+  p.result=p.points.some(x=>!['ok','i.o.','erledigt','bestanden','in ordnung','ja','✓','✔'].includes(String(x.status||'').trim().toLowerCase()))?'Mangel':'OK';
   return p;
 }
 function humanDate(v){
@@ -191,11 +191,12 @@ function humanDate(v){
   let d=new Date(v);return isNaN(d.getTime())?String(v):d.toLocaleDateString('de-DE');
 }
 function dateValue(p){
-  if(p.timestamp&&typeof p.timestamp.toDate==='function')return p.timestamp.toDate().getTime();
-  if(p.timestamp?.seconds)return p.timestamp.seconds*1000;
-  const d=String(p.date||''); const m=d.match(/^(\d{2})\.(\d{2})\.(\d{4})$/);
-  if(m)return new Date(Number(m[3]),Number(m[2])-1,Number(m[1])).getTime();
-  const n=Date.parse(d);return Number.isFinite(n)?n:0;
+ if(p.timestamp&&typeof p.timestamp.toDate==='function')return p.timestamp.toDate().getTime();
+ if(p.timestamp?.seconds)return p.timestamp.seconds*1000;
+ const d=String(p.date||'').trim();
+ const m=d.match(/^(\d{1,2})\.(\d{1,2})\.(\d{4})(?:\s*,?\s*(\d{1,2}):(\d{2}))?/);
+ if(m)return new Date(Number(m[3]),Number(m[2])-1,Number(m[1]),Number(m[4]||0),Number(m[5]||0)).getTime();
+ const n=Date.parse(d);return Number.isFinite(n)?n:0;
 }
 function keyFor(p){
   const x=(p.machine+' '+p.category+' '+(p.type||'')).toLowerCase();
@@ -236,7 +237,7 @@ function renderCalendar(){
 }
 function normalizeDguv(id,x){return {id,raw:x,name:x.name||x.deviceName||x.bezeichnung||x.device||'Unbenanntes Gerät',inventory:x.inventoryNumber||x.serialNumber||x.inventarNr||x.inventarnummer||'–',location:x.location||x.standort||'–',due:humanDate(x.nextDue||x.nextInspection||x.dueDate||x.nextDate||x.naechstePruefung),status:x.status||'Gespeichert'};}
 function renderDguv(){
- document.getElementById('dguv-body').innerHTML=!cloudDguvReady?'<tr><td colspan="6">Firebase wird geladen …</td></tr>':dguv.map((r,i)=>`<tr><td><b>${esc(r.name)}</b></td><td>${esc(r.inventory)}</td><td>${esc(r.location)}</td><td>${esc(r.due)}</td><td><span class="status">${esc(r.status)}</span></td><td><button class="icon-btn" data-dguv-index="${i}">Details</button></td></tr>`).join('')||'<tr><td colspan="6">Keine DGUV-Geräte in Firebase gefunden.</td></tr>';
+ document.getElementById('dguv-body').innerHTML=(!cloudDguvReady&&!dguv.length)?'<tr><td colspan="6">Firebase wird geladen …</td></tr>':dguv.map((r,i)=>`<tr><td><b>${esc(r.name)}</b></td><td>${esc(r.inventory)}</td><td>${esc(r.location)}</td><td>${esc(r.due)}</td><td><span class="status">${esc(r.status)}</span></td><td><button class="icon-btn" data-dguv-index="${i}">Details</button></td></tr>`).join('')||'<tr><td colspan="6">Keine DGUV-Geräte in Firebase gefunden.</td></tr>';
  document.getElementById('metric-dguv').textContent=cloudDguvReady?dguv.length:'–';
  document.getElementById('dguv-total').textContent=cloudDguvReady?dguv.length:'–';
  document.getElementById('dguv-completed').textContent=cloudDguvReady?dguv.filter(x=>/geprüft|bestanden|aktuell|ok|i\.o\./i.test(x.status)).length:'–';
@@ -248,9 +249,9 @@ function renderDguv(){
 function renderHistory(){
  const q=document.getElementById('history-search').value.toLowerCase(),type=document.getElementById('history-filter').value;
  let rows=history.filter(p=>typeMatches(p,type)&&(`${p.id} ${p.machine} ${p.category} ${p.employee}`).toLowerCase().includes(q));
- document.getElementById('history-body').innerHTML=!cloudProtocolsReady?'<tr><td colspan="6">Firebase-Verbindung wird hergestellt …</td></tr>':rows.map(p=>`<tr><td><b>${esc(p.id)}</b></td><td>${esc(p.machine)}</td><td>${esc(p.date)}</td><td>${esc(p.employee)}</td><td><span class="status ${p.result==='Mangel'?'danger':''}">${esc(p.result)}</span></td><td><div class="actions"><button class="icon-btn" data-report="${esc(p.id)}">Ansehen / PDF</button></div></td></tr>`).join('')||'<tr><td colspan="6">Keine passenden Protokolle in Firebase gefunden.</td></tr>';
- document.getElementById('side-history-count').textContent=cloudProtocolsReady?history.length:'–';
- document.getElementById('metric-proto').textContent=cloudProtocolsReady?history.length:'–';
+ document.getElementById('history-body').innerHTML=(!cloudProtocolsReady&&!history.length)?'<tr><td colspan="6">Firebase-Verbindung wird hergestellt …</td></tr>':rows.map(p=>`<tr><td><b>${esc(p.id)}</b></td><td>${esc(p.machine)}</td><td>${esc(p.date)}</td><td>${esc(p.employee)}</td><td><span class="status ${p.result==='Mangel'?'danger':''}">${esc(p.result)}</span></td><td><div class="actions"><button class="icon-btn" data-report="${esc(p.id)}">Ansehen / PDF</button></div></td></tr>`).join('')||'<tr><td colspan="6">Keine passenden Protokolle in Firebase gefunden.</td></tr>';
+ document.getElementById('side-history-count').textContent=cloudProtocolsReady?history.length:(history.length?'≥'+history.length:'–');
+ document.getElementById('metric-proto').textContent=cloudProtocolsReady?history.length:(history.length?'≥'+history.length:'–');
  renderDashboard();
 }
 function photoUrl(p){return typeof p==='string'?p:(p?.dataUrl||p?.data||p?.url||p?.src||'');}
@@ -371,7 +372,7 @@ document.querySelectorAll('[data-action="dguv"]').forEach(b=>b.onclick=()=>openM
 document.getElementById('dguv-body').addEventListener('click',e=>{const b=e.target.closest('[data-dguv-index]');if(!b)return;const p=dguv[Number(b.dataset.dguvIndex)];if(!p)return;const raw=p.raw;const docs=[...(Array.isArray(raw.documents)?raw.documents:[]),...(Array.isArray(raw.attachments)?raw.attachments:[])];const linkHtml=docs.map((v,i)=>{const u=typeof v==='string'?v:v.url||v.dataUrl||'';return /^https:\/\//.test(u)?`<p><a href="${esc(u)}" target="_blank" rel="noopener">Dokument ${i+1} öffnen</a></p>`:u.startsWith('data:application/pdf;base64,')?`<p><a href="${esc(u)}" download="DGUV_Dokument_${i+1}.pdf">Dokument ${i+1} herunterladen</a></p>`:''}).join('');openModal(p.name,'Gespeicherter DGUV-Datensatz',`<div class="field-grid"><p><b>Inventar:</b> ${esc(p.inventory)}</p><p><b>Standort:</b> ${esc(p.location)}</p><p><b>Fällig:</b> ${esc(p.due)}</p><p><b>Status:</b> ${esc(p.status)}</p></div>${linkHtml||'<p>Keine PDF-Anlagen direkt im Dokument referenziert.</p>'}`)});
 document.getElementById('cloud-backup').onclick=()=>{if(!cloudProtocolsReady){toast('Cloud ist noch nicht geladen. Export nicht möglich.');return}const data=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),source:'ecb-maintenance',protocols:history,dguv_devices:dguv.map(x=>({id:x.id,...x.raw}))},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(data);a.download='ECB_Firebase_Protokolle_Export_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
 function cloudLoadError(where,e){cloudError=where+': '+(e?.message||String(e));cloudState('Firebase-Verbindung fehlgeschlagen',cloudError,true);toast('Cloud-Fehler: '+where);}
-window.ECB_ACCEPT_SNAPSHOT=(docs,fromCache)=>{history=docs.map(d=>normalizeProtocol(d.id,d.data)).sort((a,b)=>dateValue(b)-dateValue(a));cloudProtocolsReady=!fromCache;cloudState(cloudProtocolsReady?'Firebase verbunden':'Lokaler Firebase-Zwischenspeicher',cloudProtocolsReady?`${history.length} Protokolle geladen`:'Warte auf bestätigte Serverdaten',false);renderHistory();renderCalendar();};
+window.ECB_ACCEPT_SNAPSHOT=(docs,fromCache)=>{history=docs.map(d=>normalizeProtocol(d.id,d.data)).sort((a,b)=>dateValue(b)-dateValue(a));cloudProtocolsReady=!fromCache;cloudState(cloudProtocolsReady?'Firebase verbunden':history.length?'Teilbestand historischer Protokolle geladen':'Firebase-Abgleich läuft',cloudProtocolsReady?`${history.length} Protokolle geladen`:(history.length?`Mindestens ${history.length} Protokolle geladen; weitere Quellen nicht bestätigt`:'Warte auf bestätigte Serverdaten'),false);renderHistory();renderCalendar();};
 window.ECB_ACCEPT_DGUV=(docs,fromCache)=>{dguv=docs.map(d=>normalizeDguv(d.id,d.data));cloudDguvReady=!fromCache;cloudState(cloudProtocolsReady&&cloudDguvReady?'Firebase live synchronisiert':'Firebase wird geladen',`${history.length} Protokolle · ${dguv.length} DGUV-Geräte`,false);renderDguv();};
 window.ECB_CLOUD_ERROR=cloudLoadError;
 let toastTimer;function toast(s){clearTimeout(toastTimer);const box=document.getElementById('toast');box.textContent=s;box.classList.add('show');toastTimer=setTimeout(()=>box.classList.remove('show'),3500)};
@@ -400,8 +401,55 @@ try {
  const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
  const protocols=collection(db,'artifacts','ecb-maintenance-live','public','data','protocols');
  const devices=collection(db,'artifacts','ecb-maintenance-live','public','data','dguv_devices');
- let unsubProtocols=null,unsubDevices=null;
- const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubProtocols=null;unsubDevices=null;window.ECB_SAVE=null;};
+ // Additional read-only historical Firestore collections verified / suspected from the Firebase console.
+ const protocolSources=[
+  {name:'ecb_protocols',ref:collection(db,'ecb_protocols')},
+  {name:'artifacts/ecb-maintenance',ref:collection(db,'artifacts','ecb-maintenance','public','data','protocols')},
+  {name:'artifacts/ecb-maintenance-live',ref:protocols}
+ ];
+ const deviceSources=[
+  {name:'ecb_dguv_devices',ref:collection(db,'ecb_dguv_devices')},
+  {name:'dguv_devices',ref:collection(db,'dguv_devices')},
+  {name:'artifacts/ecb-maintenance',ref:collection(db,'artifacts','ecb-maintenance','public','data','dguv_devices')},
+  {name:'artifacts/ecb-maintenance-live',ref:devices}
+ ];
+ const stops=[],protocolBySource=new Map(),deviceBySource=new Map();
+ function combine(sources,store){
+  const results=new Map();
+  for(const source of sources){
+   for(const row of store.get(source.name)?.docs||[]){
+    const key=String(row.data?.id||row.id||'').trim()||source.name+':'+row.id;
+    const score=(Array.isArray(row.data?.photos)?row.data.photos.length:0)*4
+      +(row.data?.signature?5:0)+(Array.isArray(row.data?.points)?row.data.points.length:0)
+      +(row.data?.remarks?1:0);
+    if(!results.has(key)||score>results.get(key).score)results.set(key,{row,score});
+   }
+  }
+  return {docs:Array.from(results.values(),x=>x.row),
+    complete:sources.every(source=>store.get(source.name)?.ready===true),
+    errors:sources.filter(source=>store.get(source.name)?.error).map(source=>source.name)};
+ }
+ function redrawProtocols(){
+  const state=combine(protocolSources,protocolBySource);
+  window.ECB_ACCEPT_SNAPSHOT(state.docs,!state.complete);
+  if(state.errors.length)window.ECB_CLOUD_ERROR('Protokolle: unvollständiger Datenzugriff',new Error('Quellen: '+state.errors.join(', ')));
+ }
+ function redrawDevices(){
+  const state=combine(deviceSources,deviceBySource);
+  window.ECB_ACCEPT_DGUV(state.docs,!state.complete);
+  if(state.errors.length)window.ECB_CLOUD_ERROR('DGUV: unvollständiger Datenzugriff',new Error('Quellen: '+state.errors.join(', ')));
+ }
+ function listen(sources,store,redraw){
+  for(const source of sources){
+   const stop=onSnapshot(source.ref,{includeMetadataChanges:true},snap=>{
+    store.set(source.name,{ready:!snap.metadata.fromCache,docs:snap.docs.map(d=>({id:d.id,data:d.data()})),error:null});
+    redraw();
+   },err=>{store.set(source.name,{ready:false,docs:[],error:err?.code||'unknown'});redraw();});
+   stops.push(stop);
+  }
+ }
+
+ const teardown=()=>{for(const stop of stops.splice(0)){try{stop()}catch{}}protocolBySource.clear();deviceBySource.clear();window.ECB_SAVE=null;};
  // A secure HTTPS endpoint validates original ECB account credentials server-side and
  // issues a time-limited Firebase custom token. Never publish password lists in GitHub.
  window.ECB_LOGIN=async(username,password)=>{
@@ -425,7 +473,7 @@ try {
    sessionStorage.removeItem('ecb_current_user');sessionStorage.removeItem('ecb_current_fullname');
    await signOut(auth);
  };
- window.ECB_LOGOUT=async()=>signOut(auth);
+ // Logout above also clears the username session; keep only that handler.
  onAuthStateChanged(auth,user=>{
    teardown();
    if(!user){
@@ -449,8 +497,8 @@ try {
      if(!(await getDocFromServer(reference)).exists())throw Error('Firestore hat die Speicherung nicht bestätigt.');
      return reference.id;
    };
-   unsubProtocols=onSnapshot(protocols,{includeMetadataChanges:true},snap=>window.ECB_ACCEPT_SNAPSHOT(snap.docs.map(d=>({id:d.id,data:d.data()})),snap.metadata.fromCache),err=>window.ECB_CLOUD_ERROR('Protokolle',err));
-   unsubDevices=onSnapshot(devices,{includeMetadataChanges:true},snap=>window.ECB_ACCEPT_DGUV(snap.docs.map(d=>({id:d.id,data:d.data()})),snap.metadata.fromCache),err=>window.ECB_CLOUD_ERROR('DGUV',err));
+   listen(protocolSources,protocolBySource,redrawProtocols);
+   listen(deviceSources,deviceBySource,redrawDevices);
  },err=>window.ECB_CLOUD_ERROR('Anmeldung',err));
 } catch(e){window.ECB_CLOUD_ERROR('Firebase',e);}
 </script>
