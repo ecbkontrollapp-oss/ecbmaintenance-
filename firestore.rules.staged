@@ -1,0 +1,45 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function staff() {
+      return request.auth != null && request.auth.token.ecbStaff == true;
+    }
+    function admin() {
+      return staff() && request.auth.token.ecbAdmin == true;
+    }
+
+    // These rules are NOT deployed until the old clients are migrated and backups verified.
+    match /ecb_protocols/{protocolId} {
+      allow read: if staff();
+      allow create: if staff()
+        && request.resource.data.id is string
+        && request.resource.data.machine is string
+        && request.resource.data.points is list
+        && request.resource.data.photos is list
+        && request.resource.data.signature is string;
+      allow update, delete: if admin();
+    }
+
+    match /ecb_dguv_devices/{deviceId} {
+      allow read: if staff();
+      allow create, update, delete: if admin();
+    }
+    match /dguv_devices/{deviceId} {
+      allow read: if staff();
+      allow create, update, delete: if admin();
+    }
+    // Never expose legacy user/password records to the browser.
+    match /ecb_users/{userId} {
+      allow read, write: if false;
+    }
+    match /artifacts/{appId}/public/data/{collectionId}/{docId} {
+      allow read: if staff()
+        && (appId == 'ecb-maintenance' || appId == 'ecb-maintenance-live')
+        && (collectionId == 'protocols' || collectionId == 'dguv_devices');
+      allow create, update, delete: if admin();
+    }
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
