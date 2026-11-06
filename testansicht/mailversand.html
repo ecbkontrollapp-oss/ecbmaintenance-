@@ -31,7 +31,6 @@ button:disabled{opacity:.57;cursor:default}
 #count{color:var(--dim)}
 footer{text-align:center;color:#6c7f71;font-size:12px;padding:15px}
 </style>
-<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js" crossorigin="anonymous"></script>
 </head>
 <body>
 <main>
@@ -80,8 +79,47 @@ const app=initializeApp({
  appId:'1:229926423123:web:a309c14c708fc886c62d4a6'
 },'ecb-mail-test');
 const auth=getAuth(app),db=getFirestore(app);
-let protocols=[],sentAttempted=false,logoData='';
+let protocols=[],sentAttempted=false,sending=false,logoData='';
 const msg=(id,content,good)=>{const el=$(id);el.textContent=String(content||'');el.className='status '+(good===true?'ok':good===false?'err':'');};
+
+const pdfSources=[
+ 'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js',
+ 'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js',
+ 'https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js'
+];
+let pdfLoadPromise=null;
+function loadPdfLibrary(){
+ if(typeof window.jspdf?.jsPDF==='function')return Promise.resolve();
+ if(pdfLoadPromise)return pdfLoadPromise;
+ pdfLoadPromise=(async()=>{
+  for(const src of pdfSources){
+   try{
+    await new Promise((resolve,reject)=>{
+     const script=document.createElement('script');
+     let finished=false;
+     const finish=ok=>{
+      if(finished)return;
+      finished=true;
+      clearTimeout(timeout);
+      script.onload=null;script.onerror=null;
+      if(ok)resolve();
+      else{script.remove();reject(Error('PDF-Quelle nicht erreichbar'));}
+     };
+     const timeout=setTimeout(()=>finish(false),12000);
+     script.onload=()=>finish(typeof window.jspdf?.jsPDF==='function');
+     script.onerror=()=>finish(false);
+     script.async=true;
+     script.src=src;
+     document.head.appendChild(script);
+    });
+    if(typeof window.jspdf?.jsPDF==='function')return;
+   }catch(error){/* Nächsten PDF-Server versuchen. */}
+  }
+  throw Error('Die PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung und Inhaltsblocker prüfen und erneut versuchen.');
+ })().catch(error=>{pdfLoadPromise=null;throw error;});
+ return pdfLoadPromise;
+}
+loadPdfLibrary().catch(()=>{/* Der nächste PDF-Klick darf erneut laden. */});
 const imgData=v=>typeof v==='string'?v:(v?.dataUrl||v?.data||v?.url||v?.src||'');
 async function loadLogo(){
  const txt=await fetch('./ecb-logo.b64',{cache:'no-store'}).then(async r=>{if(!r.ok)throw Error('Logo-Datei nicht erreichbar.');return r.text()});
@@ -140,8 +178,8 @@ function showSelected(){
  const p=selected();if(!p)return;
  const fotos=Array.isArray(p.photos)?p.photos.length:0,signature=Boolean(imgData(p.signature)),points=Array.isArray(p.points)?p.points.length:0;
  $('details').textContent='Prüfpunkte: '+points+' | Originalfotos: '+fotos+' | Unterschrift: '+(signature?'vorhanden':'fehlt');
- $('send-btn').disabled=sentAttempted||!signature;
- $('preview-btn').disabled=!signature;
+ $('send-btn').disabled=sentAttempted||sending||!signature;
+ $('preview-btn').disabled=sending||!signature;
 }
 $('report').addEventListener('change',()=>{showSelected();msg('mail-status','',null)});
 $('login-form').addEventListener('submit',async e=>{
@@ -176,7 +214,7 @@ async function toImage(uri,type='PNG'){
  });
 }
 async function pdfFor(p){
- if(!window.jspdf?.jsPDF)throw Error('PDF-Bibliothek ist noch nicht geladen.');
+ await loadPdfLibrary();
  if(!logoData)throw Error('Das Original-ECB-Logo fehlt.');
  if(!p?.machine||!Array.isArray(p.points)||!p.signature)throw Error('Pflichtfelder, Prüfpunkte oder Unterschrift fehlen.');
  const pdf=new window.jspdf.jsPDF({format:'a4',unit:'mm'});
@@ -220,31 +258,46 @@ async function pdfFor(p){
  return {pdf,b64};
 }
 $('preview-btn').addEventListener('click',async()=>{
- const p=selected();if(!p)return;const button=$('preview-btn');button.disabled=true;
- try{msg('mail-status','PDF mit Originalbildern wird erstellt …');const file=await pdfFor(p);
+ const p=selected();if(!p||sending)return;
+ const button=$('preview-btn');button.disabled=true;
+ try{
+  msg('mail-status','PDF mit Originalbildern wird erstellt …');
+  const file=await pdfFor(p);
   file.pdf.save('ECB_Protokoll_'+p.id.replace(/[^A-Za-z0-9-_]/g,'_')+'.pdf');
   msg('mail-status','PDF heruntergeladen. Jetzt kannst du den Versand testen.',true);
- }catch(e){msg('mail-status',e.message,false)}finally{button.disabled=false;}
+ }catch(e){msg('mail-status',e.message||String(e),false);}
+ finally{showSelected();}
 });
 $('send-btn').addEventListener('click',async()=>{
- const p=selected();if(!p||sentAttempted)return;
+ const p=selected();if(!p||sentAttempted||sending)return;
  if(!confirm('Test-E-Mail mit PDF von '+p.id+' wirklich an pb@ecb-system.de senden?'))return;
- sentAttempted=true;$('send-btn').disabled=true;$('preview-btn').disabled=true;
+ sending=true;showSelected();
+ let requestStarted=false;
  try{
-  msg('mail-status','Original-PDF wird erstellt und die E-Mail einmalig angefordert …');
+  msg('mail-status','Original-PDF wird erstellt und geprüft …');
   const {b64}=await pdfFor(p);
   const user=auth.currentUser;if(!user)throw Error('Firebase-Sitzung abgelaufen. Seite neu laden.');
   const token=await user.getIdToken(true);
   const requestId=crypto.randomUUID();
+  // Erst ab hier kann eine Mail ausgelöst werden. Danach verhindert die Sperre Doppelversand.
+  sentAttempted=true;
+  requestStarted=true;
+  msg('mail-status','PDF erstellt. E-Mail wird einmalig angefordert …');
   const response=await fetch(worker,{method:'POST',headers:{
-    'Authorization':'Bearer '+token,'Content-Type':'application/json'
-   },body:JSON.stringify({mode:'manual',protocolId:p.id,sourcePath:p.__path,
-    recipient:'pb@ecb-system.de',requestId,pdfBase64:b64})});
+   'Authorization':'Bearer '+token,'Content-Type':'application/json'
+  },body:JSON.stringify({mode:'manual',protocolId:p.id,sourcePath:p.__path,
+   recipient:'pb@ecb-system.de',requestId,pdfBase64:b64})});
   const result=await response.json().catch(()=>({}));
   if(!response.ok||!result.ok)throw Error(result.error||'Cloudflare hat die E-Mail nicht bestätigt (HTTP '+response.status+').');
   msg('mail-status','Resend hat den Auftrag bestätigt. Protokoll '+p.id+' wurde einmalig an pb@ecb-system.de gesendet. Versand-ID: '+result.jobId,true);
  }catch(e){
-  msg('mail-status','Versand nicht bestätigt: '+(e.message||e)+'. Bitte nicht erneut senden, bevor wir den Fehler geprüft haben.',false);
+  const reason=e.message||String(e);
+  msg('mail-status',requestStarted
+   ?'Versand nicht bestätigt: '+reason+'. Bitte nicht erneut senden, bevor der Status geprüft wurde.'
+   :'Noch keine E-Mail verschickt: '+reason+'. Du kannst den Versand erneut versuchen.',false);
+ }finally{
+  sending=false;
+  showSelected();
  }
 });
 </script>
