@@ -75,6 +75,30 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
 .ecb-admin-warning{border-left:4px solid #e1ad55;background:#fff9eb;color:#715728;padding:13px;border-radius:8px;font-size:12px;line-height:1.6}
 .ecb-admin-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px;border:1px solid #e4ebe0;border-radius:10px;background:#fafcf9;margin:9px 0}
 .ecb-admin-row>div{min-width:0;overflow-wrap:anywhere}.ecb-admin-row small{display:block;color:#6e7e72}
+
+.ecb-user-subtitle{font-size:16px;margin:18px 0 10px;color:#2e5135}
+.ecb-users-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.ecb-users-grid input,.ecb-users-grid select{display:block;width:100%;min-height:48px;border:1px solid #cbdcce;border-radius:11px;padding:11px 12px;font:inherit;background:#fff;color:#1d3725}
+.ecb-users-grid .field{min-width:0}
+#ecb-users-workspace{border:0;padding:0;margin:14px 0 0;min-width:0}
+#ecb-users-workspace:disabled{opacity:.55}
+.ecb-user-divider{height:1px;background:#e2eadf;margin:23px 0}
+.ecb-user-list-head{display:flex;align-items:center;justify-content:space-between;gap:11px}
+.ecb-users-list{display:grid;gap:9px}
+.ecb-user-account{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:14px;border:1px solid #dae7da;background:#f9fcf7;border-radius:12px}
+.ecb-user-account>div{min-width:0;overflow-wrap:anywhere}
+.ecb-user-account small{display:block;color:#6b7c6a;font-size:12px;line-height:1.5}
+.ecb-user-account strong{color:#294b35}
+.ecb-user-edit{background:#f4f9f0;border:1px solid #d4e7d0;border-radius:14px;padding:18px;margin-top:18px}
+.ecb-user-toggle{display:flex;align-items:center;gap:8px;margin:15px 0}
+.ecb-user-toggle input{width:19px;height:19px}
+.ecb-user-delete{margin-top:19px;border-top:1px solid #e5cbc7;padding-top:16px}
+.ecb-user-delete strong{color:#a43b30}
+.ecb-user-delete input{display:block;width:100%;padding:12px;border:1px solid #e4cbc6;border-radius:10px;margin:10px 0;min-height:45px}
+.ecb-user-delete button{color:#a33a30;border:1px solid #e4cbc6}
+.ecb-user-result{min-height:18px;margin:10px 0}
+@media(max-width:620px){.ecb-users-grid{grid-template-columns:1fr}.ecb-user-account{align-items:flex-start}.ecb-user-account button{flex-shrink:0}}
+
 .ecb-account-form{max-width:520px}.ecb-account-form .field{margin:12px 0}.ecb-account-form input{width:100%;min-height:49px}
 @media(max-width:730px){.ecb-admin-card{padding:16px}.ecb-admin-metrics{grid-template-columns:1fr 1fr}.ecb-admin-actions>*{flex:1}.sidebar .nav-btn[data-page="admin"]{font-size:9px}}
 </style>
@@ -207,9 +231,45 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
  </div>
  <div class="ecb-admin-card">
   <h2>Benutzerverwaltung</h2>
-  <p>Mitarbeiter anlegen, Benutzerkonten sperren und löschen. Dafür öffnest du die geschützte Firebase-Konsole.</p>
-  <div class="ecb-admin-actions"><a class="button primary" target="_blank" rel="noopener noreferrer" href="https://console.firebase.google.com/project/ecb-maintenance/authentication/users">Benutzer anlegen und verwalten ↗</a></div>
-  <div class="ecb-admin-warning">Die direkte Benutzerverwaltung innerhalb dieser App ist noch nicht freigeschaltet. Dafür fehlt eine geprüfte serverseitige Firebase-Admin-Anbindung. Bestehende Benutzer werden nicht verändert.</div>
+  <p>Mitarbeiter direkt verwalten. Die Aktionen werden erst freigegeben, wenn Firebase die sichere Admin-Verbindung bestätigt.</p>
+  <div class="ecb-admin-warning" id="ecb-users-connect-status" role="status" aria-live="polite">Die sichere Firebase-Admin-Verbindung wird geprüft.</div>
+  <div class="ecb-admin-actions">
+   <button class="button primary" type="button" id="ecb-users-check">Admin-Verbindung prüfen</button>
+   <a class="button subtle" target="_blank" rel="noopener noreferrer" href="https://console.firebase.google.com/project/ecb-maintenance/authentication/users">Firebase-Konsole öffnen ↗</a>
+  </div>
+  <fieldset id="ecb-users-workspace" disabled aria-label="Geschützte Benutzerverwaltung">
+   <form id="ecb-user-create-form" autocomplete="off">
+    <h3 class="ecb-user-subtitle">Neuen Mitarbeiter anlegen</h3>
+    <div class="ecb-users-grid">
+     <div class="field"><label for="ecb-user-new-name">Vor- und Nachname</label><input id="ecb-user-new-name" type="text" maxlength="90" minlength="2" autocomplete="off" required placeholder="Name des Mitarbeiters"></div>
+     <div class="field"><label for="ecb-user-new-email">E-Mail-Adresse</label><input id="ecb-user-new-email" type="email" required autocomplete="off" placeholder="mitarbeiter@firma.de"></div>
+     <div class="field"><label for="ecb-user-new-password">Startpasswort</label><input id="ecb-user-new-password" type="password" minlength="12" maxlength="128" required autocomplete="new-password" placeholder="Mindestens 12 Zeichen"></div>
+     <div class="field"><label for="ecb-user-new-role">Berechtigung</label><select id="ecb-user-new-role"><option value="staff">Mitarbeiter</option><option value="admin">Administrator</option></select></div>
+    </div>
+    <button type="submit" class="button primary" id="ecb-users-create-submit">Mitarbeiter sicher anlegen</button>
+    <p class="muted ecb-user-result" id="ecb-users-create-result" aria-live="polite" role="status"></p>
+   </form>
+   <div class="ecb-user-divider"></div>
+   <div class="ecb-user-list-head"><h3 class="ecb-user-subtitle">Vorhandene Benutzer</h3><button class="button subtle" type="button" id="ecb-users-refresh">Aktualisieren</button></div>
+   <p id="ecb-users-list-status" class="muted" aria-live="polite"></p>
+   <div id="ecb-users-list" class="ecb-users-list"></div>
+   <form id="ecb-user-edit-form" class="ecb-user-edit" style="display:none" autocomplete="off">
+    <h3>Benutzer bearbeiten</h3>
+    <p class="muted" id="ecb-user-edit-identity"></p>
+    <input type="hidden" id="ecb-user-edit-uid">
+    <div class="ecb-users-grid">
+     <div class="field"><label for="ecb-user-edit-name">Name</label><input type="text" id="ecb-user-edit-name" minlength="2" maxlength="90" required></div>
+     <div class="field"><label for="ecb-user-edit-role">Rolle</label><select id="ecb-user-edit-role"><option value="staff">Mitarbeiter</option><option value="admin">Administrator</option></select></div>
+    </div>
+    <label class="ecb-user-toggle"><input type="checkbox" id="ecb-user-edit-disabled"> Konto sperren (Anmeldung nicht erlaubt)</label>
+    <div class="ecb-admin-actions"><button class="button primary" type="submit" id="ecb-user-edit-save">Änderungen speichern</button><button type="button" class="button subtle" id="ecb-user-edit-cancel">Abbrechen</button></div>
+    <div class="ecb-user-delete"><strong>Benutzer endgültig löschen</strong><p class="muted">Zur Bestätigung die vollständige E-Mail-Adresse des Benutzers eingeben. Protokolle bleiben erhalten.</p>
+     <input id="ecb-user-delete-confirm" type="text" autocomplete="off" placeholder="E-Mail zur Löschbestätigung">
+     <button type="button" class="button subtle" id="ecb-user-edit-delete">Benutzer dauerhaft löschen</button>
+    </div>
+    <p class="ecb-user-result muted" id="ecb-user-edit-result" role="status" aria-live="polite"></p>
+   </form>
+  </fieldset>
  </div>
  <div class="ecb-admin-card">
   <h2>Dokumente und Wartungsprotokolle</h2>
@@ -255,7 +315,7 @@ let history=[]; let cloudProtocolsReady=false; let cloudDguvReady=false; let clo
 let lastSavedMail=null,mailSending=false;const mailRequests=new Set();
 let dguv=[];
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function goto(page){if(page==='admin'&&!window.ECB_ADMIN_ACCESS){toast('Nur für Administratoren.');return;}if(page==='account'&&!window.ECB_CHANGE_MY_PASSWORD){toast('Bitte zuerst anmelden.');return;}document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+page));document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.page===page));const title=({dashboard:'Übersicht',calendar:'Wartungskalender',retro:'Nachtragen',dguv:'DGUV V3',history:'Protokolle',form:'Protokoll erstellen',preview:'Protokollvorschau',admin:'Administration',account:'Mein Konto'})[page]||page;document.getElementById('breadcrumb-current').textContent=title;window.scrollTo({top:0,behavior:'smooth'});if(page==='history'){renderHistory();showSavedMailBanner();}if(page==='calendar')renderCalendar();if(page==='dguv')renderDguv();if(page==='admin')renderAdminPanel();}
+function goto(page){if(page==='admin'&&!window.ECB_ADMIN_ACCESS){toast('Nur für Administratoren.');return;}if(page==='account'&&!window.ECB_CHANGE_MY_PASSWORD){toast('Bitte zuerst anmelden.');return;}document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+page));document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.page===page));const title=({dashboard:'Übersicht',calendar:'Wartungskalender',retro:'Nachtragen',dguv:'DGUV V3',history:'Protokolle',form:'Protokoll erstellen',preview:'Protokollvorschau',admin:'Administration',account:'Mein Konto'})[page]||page;document.getElementById('breadcrumb-current').textContent=title;window.scrollTo({top:0,behavior:'smooth'});if(page==='history'){renderHistory();showSavedMailBanner();}if(page==='calendar')renderCalendar();if(page==='dguv')renderDguv();if(page==='admin'){renderAdminPanel();ecbAdminCheck();}}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>goto(b.dataset.page)));
 let currentType='wash',retroActive=false,signed=false,previewP=null;
 function start(type,retro=false){currentType=type;retroActive=retro;let obj=machines[type];const pic=document.getElementById('form-machine-photo');const banner=document.getElementById('form-machine-banner');if(pic && banner){pic.src=ECB_ASSETS[type]||ECB_ASSETS.comp;banner.style.display='flex';document.getElementById('form-machine-photo-title').textContent=obj.title;}document.getElementById('form-title').textContent=obj.title;document.getElementById('form-machine').innerHTML=obj.names.map(n=>`<option>${esc(n)}</option>`).join('');if(retro&&['wash','dry'].includes(type)){let n=document.getElementById('retro-machine').value;document.getElementById('form-machine').selectedIndex=Math.max(0,Math.min(3,Number(n)-1));}document.getElementById('form-name').value=retro?document.getElementById('retro-name').value:'';document.getElementById('form-notes').value='';document.getElementById('form-runtime').value='';document.getElementById('cloud-photo').value='';document.getElementById('photo-names').textContent='';document.getElementById('checklist').innerHTML=obj.points.map((p,i)=>`<div class="check"><label>${i+1}. ${esc(p)}</label><select aria-label="Ergebnis Prüfpunkt ${i+1}"><option value="OK">✓ OK</option><option value="Mangel">⚠ Mangel</option></select></div>`).join('');const canvas=document.getElementById('signature');canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);signed=false;goto('form');}
@@ -588,6 +648,133 @@ window.ECB_ACCEPT_SNAPSHOT=(docs,fromCache)=>{history=docs.map(d=>normalizeProto
 window.ECB_ACCEPT_DGUV=(docs,fromCache)=>{dguv=docs.map(d=>normalizeDguv(d.id,d.data));cloudDguvReady=!fromCache;cloudState(cloudProtocolsReady&&cloudDguvReady?'Firebase live synchronisiert':'Firebase wird geladen',`${history.length} Protokolle · ${dguv.length} DGUV-Geräte`,false);renderDguv();};
 window.ECB_CLOUD_ERROR=cloudLoadError;
 
+
+const ECB_ADMIN_WORKER='https://ecb-wartung-admin.ecbmaintenance-mail.workers.dev';
+let ecbUsersReady=false,ecbUsersState=null,ecbUsersList=[],ecbUsersLoading=false;
+function ecbUsersMessage(id,message,bad=false){
+ const target=document.getElementById(id);
+ target.textContent=message||'';
+ if(id==='ecb-users-connect-status'){target.style.borderLeftColor=bad?'#bf5143':'#77a65a';target.style.color=bad?'#8c4b33':'#315d35';}
+ else target.style.color=bad?'#ae3833':'#2a733b';
+}
+function ecbAdminLocked(message){
+ ecbUsersReady=false;
+ document.getElementById('ecb-users-workspace').disabled=true;
+ document.getElementById('ecb-users-list').textContent='';
+ document.getElementById('ecb-user-edit-form').style.display='none';
+ document.getElementById('ecb-users-list-status').textContent='';
+ ecbUsersMessage('ecb-users-connect-status',message||'Admin-Dienst ist noch nicht freigeschaltet.',true);
+}
+async function ecbAdminCheck(){
+ if(!window.ECB_ADMIN_ACCESS)return;
+ if(!window.ECB_ADMIN_API){ecbAdminLocked('Keine gültige Firebase-Anmeldung.');return;}
+ const button=document.getElementById('ecb-users-check');button.disabled=true;
+ ecbUsersMessage('ecb-users-connect-status','Sichere Admin-Verbindung wird überprüft …');
+ try{
+  const status=await window.ECB_ADMIN_API('/admin/status');
+  ecbUsersState=status;
+  if(!status.ready){ecbAdminLocked(status.message||'Firebase-Servicekonto muss noch aktiviert werden.');return;}
+  ecbUsersReady=true;
+  document.getElementById('ecb-users-workspace').disabled=false;
+  document.getElementById('ecb-user-new-role').querySelector('[value="admin"]').disabled=status.role!=='owner';
+  ecbUsersMessage('ecb-users-connect-status','✓ Admin-Verbindung bestätigt. Benutzer können jetzt sicher verwaltet werden.');
+  await ecbAdminList();
+ }catch(e){ecbAdminLocked('Benutzerverwaltung noch nicht verfügbar: '+(e.message||'Verbindung fehlgeschlagen')+'. Bestehende Konten bleiben unverändert.');}
+ finally{button.disabled=false;}
+}
+async function ecbAdminList(){
+ if(!ecbUsersReady||!window.ECB_ADMIN_API||ecbUsersLoading)return;
+ ecbUsersLoading=true;
+ ecbUsersMessage('ecb-users-list-status','Benutzer werden geladen …');
+ try{
+  const result=await window.ECB_ADMIN_API('/admin/users');
+  ecbUsersList=Array.isArray(result.users)?result.users:[];
+  const list=document.getElementById('ecb-users-list');list.textContent='';
+  ecbUsersList.forEach(user=>{
+   const row=document.createElement('div');row.className='ecb-user-account';
+   const summary=document.createElement('div');
+   const name=document.createElement('strong');name.textContent=user.name||'Mitarbeiter';
+   const extra=document.createElement('small');extra.textContent=[user.email,user.role==='admin'?'Administrator':'Mitarbeiter',user.disabled?'Gesperrt':'Aktiv'].join(' · ');
+   summary.append(name,extra);
+   const button=document.createElement('button');button.type='button';button.className='button subtle';button.textContent='Bearbeiten';
+   button.addEventListener('click',()=>ecbAdminEdit(user.uid));
+   row.append(summary,button);list.append(row);
+  });
+  ecbUsersMessage('ecb-users-list-status',ecbUsersList.length+' Benutzer geladen'+(result.more?' · weitere Konten sind im Firebase-Projekt vorhanden':'')+'.');
+ }catch(e){ecbUsersMessage('ecb-users-list-status','Laden fehlgeschlagen: '+(e.message||e),true);}
+ finally{ecbUsersLoading=false;}
+}
+function ecbAdminEdit(uid){
+ if(!ecbUsersReady)return;
+ const user=ecbUsersList.find(x=>x.uid===uid);
+ if(!user)return;
+ document.getElementById('ecb-user-edit-uid').value=user.uid;
+ document.getElementById('ecb-user-edit-identity').textContent=user.email+' · Benutzer-ID '+user.uid;
+ document.getElementById('ecb-user-edit-name').value=user.name||'';
+ const role=document.getElementById('ecb-user-edit-role');
+ role.value=user.role==='admin'?'admin':'staff';
+ role.querySelector('[value="admin"]').disabled=ecbUsersState?.role!=='owner';
+ document.getElementById('ecb-user-edit-disabled').checked=Boolean(user.disabled);
+ document.getElementById('ecb-user-delete-confirm').value='';
+ ecbUsersMessage('ecb-user-edit-result','');
+ const form=document.getElementById('ecb-user-edit-form');form.style.display='block';
+ form.scrollIntoView({behavior:'smooth',block:'nearest'});
+}
+document.getElementById('ecb-users-check').addEventListener('click',ecbAdminCheck);
+document.getElementById('ecb-users-refresh').addEventListener('click',ecbAdminList);
+document.getElementById('ecb-user-edit-cancel').addEventListener('click',()=>document.getElementById('ecb-user-edit-form').style.display='none');
+document.getElementById('ecb-user-create-form').addEventListener('submit',async event=>{
+ event.preventDefault();
+ if(!ecbUsersReady||!window.ECB_ADMIN_API)return;
+ const name=document.getElementById('ecb-user-new-name').value.trim();
+ const email=document.getElementById('ecb-user-new-email').value.trim().toLowerCase();
+ const password=document.getElementById('ecb-user-new-password').value;
+ const role=document.getElementById('ecb-user-new-role').value;
+ if(password.length<12){ecbUsersMessage('ecb-users-create-result','Bitte mindestens 12 Zeichen als Startpasswort verwenden.',true);return;}
+ const button=document.getElementById('ecb-users-create-submit');button.disabled=true;
+ ecbUsersMessage('ecb-users-create-result','Konto wird sicher in Firebase angelegt …');
+ try{
+  const created=await window.ECB_ADMIN_API('/admin/users/create','POST',{name,email,password,role});
+  document.getElementById('ecb-user-create-form').reset();
+  ecbUsersMessage('ecb-users-create-result','✓ Mitarbeiter '+created.email+' erfolgreich angelegt. Die Person kann sich mit ihren Zugangsdaten anmelden.');
+  await ecbAdminList();
+ }catch(e){ecbUsersMessage('ecb-users-create-result','Benutzeranlage nicht bestätigt: '+(e.message||e),true);}
+ finally{button.disabled=false;document.getElementById('ecb-user-new-password').value='';}
+});
+document.getElementById('ecb-user-edit-form').addEventListener('submit',async event=>{
+ event.preventDefault();if(!ecbUsersReady||!window.ECB_ADMIN_API)return;
+ const uid=document.getElementById('ecb-user-edit-uid').value;
+ const name=document.getElementById('ecb-user-edit-name').value.trim();
+ const role=document.getElementById('ecb-user-edit-role').value;
+ const disabled=document.getElementById('ecb-user-edit-disabled').checked;
+ const button=document.getElementById('ecb-user-edit-save');button.disabled=true;
+ ecbUsersMessage('ecb-user-edit-result','Änderungen werden gespeichert …');
+ try{
+  await window.ECB_ADMIN_API('/admin/users/update','POST',{uid,name,role,disabled});
+  ecbUsersMessage('ecb-user-edit-result','✓ Benutzerkonto aktualisiert.');
+  await ecbAdminList();
+ }catch(e){ecbUsersMessage('ecb-user-edit-result','Änderungen nicht bestätigt: '+(e.message||e),true);}
+ finally{button.disabled=false;}
+});
+document.getElementById('ecb-user-edit-delete').addEventListener('click',async()=>{
+ if(!ecbUsersReady||!window.ECB_ADMIN_API)return;
+ const uid=document.getElementById('ecb-user-edit-uid').value;
+ const person=ecbUsersList.find(p=>p.uid===uid);
+ if(!person)return;
+ const confirmEmail=document.getElementById('ecb-user-delete-confirm').value.trim().toLowerCase();
+ if(confirmEmail!==person.email.toLowerCase()){ecbUsersMessage('ecb-user-edit-result','Bitte die vollständige E-Mail-Adresse des Benutzers als Löschbestätigung eingeben.',true);return;}
+ if(!confirm('Benutzer '+person.email+' dauerhaft aus Firebase Authentication löschen? Die Wartungsprotokolle bleiben erhalten.'))return;
+ const button=document.getElementById('ecb-user-edit-delete');button.disabled=true;
+ ecbUsersMessage('ecb-user-edit-result','Benutzer wird gelöscht …');
+ try{
+  await window.ECB_ADMIN_API('/admin/users/delete','POST',{uid,confirmEmail});
+  document.getElementById('ecb-user-edit-form').style.display='none';
+  ecbUsersMessage('ecb-users-list-status','✓ Benutzerkonto gelöscht. Die Protokolle bleiben in der Cloud.');
+  await ecbAdminList();
+ }catch(e){ecbUsersMessage('ecb-user-edit-result','Löschen nicht bestätigt: '+(e.message||e),true);}
+ finally{button.disabled=false;}
+});
+
 window.ECB_ADMIN_ACCESS=false;
 window.ECB_CHANGE_MY_PASSWORD=null;
 function setAdminAccess(granted){
@@ -675,6 +862,8 @@ try {
  window.ECB_LOGOUT=async()=>signOut(auth);
  onAuthStateChanged(auth,user=>{
    teardown();
+   window.ECB_ADMIN_API=null;
+   ecbAdminLocked('Admin-Zugang wird nach Anmeldung überprüft.');
    setAdminAccess(false);
    window.ECB_CHANGE_MY_PASSWORD=null;
    if(!user){
@@ -701,6 +890,18 @@ try {
      if(auth.currentUser?.uid!==user.uid)return;
      setAdminAccess(claims.ecbAdmin===true||user.email?.toLowerCase()==='u628a9b8002418e770775778dae8759cac10cb8ab032ad589@accounts.ecb.invalid');
    }).catch(()=>setAdminAccess(false));
+   window.ECB_ADMIN_API=async(route,method='GET',payload=null)=>{
+     const signed=auth.currentUser;
+     if(!signed)throw Error('Bitte zuerst mit Firebase anmelden.');
+     const token=await signed.getIdToken(true);
+     let response;
+     try{
+       response=await fetch(ECB_ADMIN_WORKER+route,{method,headers:{'Authorization':'Bearer '+token,'Content-Type':'application/json'},body:payload?JSON.stringify(payload):undefined});
+     }catch{throw Error('Der geschützte Admin-Cloud-Dienst ist noch nicht erreichbar.')}
+     const body=await response.json().catch(()=>({}));
+     if(!response.ok||!body.ok)throw Error(body.error||'Admin-Dienst antwortet nicht (HTTP '+response.status+').');
+     return body;
+   };
    window.ECB_SAVE=async protocol=>{
      if(!navigator.onLine)throw Error('Offline: Speichern nicht möglich');
      const reference=doc(protocols),record={...protocol,id:reference.id};
