@@ -74,7 +74,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
  <p style="color:#6a7d71;margin-bottom:18px">Aus Datenschutzgründen werden Protokolle, Dokumentationsfotos und Unterschriften erst nach einer bestätigten Firebase-Anmeldung geladen.</p>
  <form id="auth-form" autocomplete="on"><div class="field-grid"><div class="field"><label for="firebase-email">E-Mail</label><input type="email" id="firebase-email" autocomplete="username" required placeholder="E-Mail-Adresse"></div><div class="field"><label for="firebase-password">Passwort</label><input type="password" id="firebase-password" autocomplete="current-password" required placeholder="Firebase-Passwort"></div></div>
  <button class="button primary" style="margin-top:16px" id="auth-submit" type="submit">Anmelden</button><span class="muted" id="auth-feedback" style="display:block;margin-top:12px" role="status">Alte lokal gespeicherte App-Passwörter sind keine Firebase-Anmeldedaten.</span></form></section>
- <div id="auth-identity" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:13px"><span class="muted" id="auth-email"></span><button class="button subtle" id="auth-logout" type="button">Abmelden</button></div>
+ <div id="auth-identity" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:13px"><button class="button subtle" id="auth-logout" type="button">Abmelden</button></div>
  <div class="notice" id="cloud-message" role="status"><span>ⓘ</span><span id="cloud-message-text">Anmeldung erforderlich: Die Originaldaten werden nach erfolgreicher Authentifizierung synchronisiert.</span></div>
  <section id="view-dashboard" class="view active"><div class="hero"><div><div class="eyebrow">Wartung & Qualitätssicherung</div><h1>Wartungsübersicht</h1><p>Alle Anlagen, anstehenden Prüfungen und Wartungsprotokolle übersichtlich an einem Ort.</p></div><button class="button primary" data-action="new">＋ Neue Wartung</button></div>
  <div class="metric-grid"><div class="metric"><div class="metric-top">Anlagen im System <span class="metric-icon">⚙</span></div><strong>10</strong><small>8 Maschinen · 2 Kompressorprüfungen</small></div><div class="metric"><div class="metric-top">Wartungen fällig <span class="metric-icon" style="background:#fff3de;color:#bd8529">◷</span></div><strong id="metric-due">–</strong><small id="metric-due-note">Fälligkeit aus Wartungsverlauf</small></div><div class="metric"><div class="metric-top">DGUV Prüfgeräte <span class="metric-icon" style="background:#e7f2f7;color:#387e98">♧</span></div><strong id="metric-dguv">–</strong><small>Bestand aus Firebase</small></div><div class="metric"><div class="metric-top">Gespeicherte Protokolle <span class="metric-icon">▣</span></div><strong id="metric-proto">–</strong><small class="good">Aus der originalen Cloud-Historie</small></div></div>
@@ -526,7 +526,6 @@ try {
    }
    document.getElementById('auth-panel').style.display='none';
    document.getElementById('auth-identity').style.display='flex';
-   document.getElementById('auth-email').textContent=user.email||'Angemeldet';
    window.ECB_SAVE=async protocol=>{
      if(!navigator.onLine)throw Error('Offline: Speichern nicht möglich');
      const reference=doc(protocols),record={...protocol,id:reference.id};
