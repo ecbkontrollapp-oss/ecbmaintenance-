@@ -412,9 +412,10 @@ function showReport(p){
  const photos=(p.photos||[]).map(photoUrl).filter(Boolean);
  const photoContent=photos.map((img,i)=>`<div><img class="report-image" src="${esc(img)}" alt="Dokumentationsfoto ${i+1}"><small>Foto ${i+1}</small></div>`).join('');
  const signature=typeof p.signature==='string'?p.signature:(p.signature?.dataUrl||'');
- document.getElementById('report-content').innerHTML=`<div style="display:flex;align-items:center;gap:15px;border-bottom:2px solid #7da93a;padding-bottom:16px;margin-bottom:17px"><div class="logo-plate original-logo-plate"><img data-ecb-logo alt="ECB Logo" src="${ECB_ASSETS.logo}"></div><div><h3 style="font-size:17px;margin:0">E.C.B. REINIGUNGSSYSTEME GmbH</h3><div class="muted">Wartungs- und Prüfprotokoll</div></div></div><div class="field-grid"><p><b>Protokoll-Nr.</b><br>${esc(p.id)}</p><p><b>Datum</b><br>${esc(p.date)}</p><p><b>Anlage</b><br>${esc(p.machine)}</p><p><b>Techniker</b><br>${esc(p.employee)}</p>${p.runtime?`<p><b>Betriebsstunden</b><br>${esc(p.runtime)}</p>`:''}</div><h3>Prüfpunkte</h3>${(p.points||[]).map((x,i)=>`<div class="check"><label>${esc(x.title||x.name||('Prüfpunkt '+(i+1)))}</label><span class="status ${x.status==='Mangel'?'danger':''}">${esc(x.status||'–')}</span></div>`).join('')}<p><b>Bemerkungen:</b> ${esc(p.remarks||'–')}</p><h3>Dokumentationsfotos (${photos.length})</h3>${photos.length?`<div class="report-photos">${photoContent}</div>`:'<p class="muted">Keine Fotos hinterlegt.</p>'}<h3>Unterschrift</h3>${signature?`<img class="report-sign" src="${esc(signature)}" alt="Gespeicherte Unterschrift">`:'<p class="muted">Keine Unterschrift im Datensatz vorhanden.</p>'}`;
+ document.getElementById('report-content').innerHTML=`<div style="display:flex;align-items:center;gap:15px;border-bottom:2px solid #7da93a;padding-bottom:16px;margin-bottom:17px"><div class="logo-plate original-logo-plate"><img alt="ECB Wartungssystem – Original-App-Logo" src="${ECB_WARTUNG_PDF_LOGO}"></div><div><h3 style="font-size:17px;margin:0">E.C.B. REINIGUNGSSYSTEME GmbH</h3><div class="muted">Wartungs- und Prüfprotokoll</div></div></div><div class="field-grid"><p><b>Protokoll-Nr.</b><br>${esc(p.id)}</p><p><b>Datum</b><br>${esc(p.date)}</p><p><b>Anlage</b><br>${esc(p.machine)}</p><p><b>Techniker</b><br>${esc(p.employee)}</p>${p.runtime?`<p><b>Betriebsstunden</b><br>${esc(p.runtime)}</p>`:''}</div><h3>Prüfpunkte</h3>${(p.points||[]).map((x,i)=>`<div class="check"><label>${esc(x.title||x.name||('Prüfpunkt '+(i+1)))}</label><span class="status ${x.status==='Mangel'?'danger':''}">${esc(x.status||'–')}</span></div>`).join('')}<p><b>Bemerkungen:</b> ${esc(p.remarks||'–')}</p><h3>Dokumentationsfotos (${photos.length})</h3>${photos.length?`<div class="report-photos">${photoContent}</div>`:'<p class="muted">Keine Fotos hinterlegt.</p>'}<h3>Unterschrift</h3>${signature?`<img class="report-sign" src="${esc(signature)}" alt="Gespeicherte Unterschrift">`:'<p class="muted">Keine Unterschrift im Datensatz vorhanden.</p>'}`;
  goto('preview');
 }
+const ECB_WARTUNG_PDF_LOGO='./icons/icon-512.png?v=20261106-approved';
 async function imageToPdfData(url,format='JPEG'){
  if(!url)return null;
  return await new Promise((resolve,reject)=>{
@@ -425,12 +426,23 @@ async function downloadPdf(){
  const JsPDF=window.jspdf?.jsPDF;if(!JsPDF){toast('PDF-Bibliothek ist nicht verfügbar. Bitte Internetverbindung prüfen.');return;}
  const btn=document.getElementById('print-report');btn.disabled=true;btn.textContent='PDF wird erstellt …';
  try{
-   const pdf=new JsPDF({orientation:'portrait',unit:'mm',format:'a4'});const width=210,margin=16,usable=178;let y=15;
-   const newPageIf=(h)=>{if(y+h>276){pdf.addPage();y=18;}};
+   const pdf=new JsPDF({orientation:'portrait',unit:'mm',format:'a4'});const width=210,margin=16,usable=178;let y=45;
+   const logo=await imageToPdfData(ECB_WARTUNG_PDF_LOGO,'PNG');
+   if(!logo)throw Error('Original-Wartungslogo konnte nicht geladen werden.');
+   const drawHeader=()=>{
+     pdf.setFillColor(245,250,248);pdf.rect(0,0,width,38,'F');
+     pdf.addImage(logo.data,'PNG',margin,8,25,25);
+     pdf.setFontSize(14);pdf.setFont('helvetica','bold');pdf.setTextColor(32,68,55);
+     pdf.text('E.C.B. Reinigungssysteme GmbH',49,18);
+     pdf.setFontSize(9);pdf.setFont('helvetica','normal');pdf.text('ECB Wartungssystem | Digitales Wartungs- und Prüfprotokoll',49,25);
+     pdf.setDrawColor(115,170,69);pdf.setLineWidth(.6);pdf.line(margin,37,194,37);
+     pdf.setTextColor(0,0,0);
+   };
+   drawHeader();
+   const newPageIf=(h)=>{if(y+h>276){pdf.addPage();drawHeader();y=45;}};
    const wrap=(text,x,size=10,bold=false,max=usable)=>{pdf.setFont('helvetica',bold?'bold':'normal');pdf.setFontSize(size);const lines=pdf.splitTextToSize(String(text||'–'),max);newPageIf(lines.length*5+3);pdf.text(lines,x,y);y+=lines.length*5+3;};
-   const logo=await imageToPdfData(ECB_ASSETS.logo,'PNG');if(logo){pdf.addImage(logo.data,'PNG',margin,12,41,Math.min(19,41*logo.height/logo.width));}
-   pdf.setFontSize(15);pdf.setFont('helvetica','bold');pdf.text('E.C.B. Reinigungssysteme GmbH',65,20);
-   pdf.setFontSize(9);pdf.setFont('helvetica','normal');pdf.text('Digitales Wartungs- und Prüfprotokoll',65,26);pdf.setDrawColor(115,170,69);pdf.setLineWidth(.6);pdf.line(margin,33,194,33);y=41;
+   wrap('Kategorien: '+(p.category||p.type||'Wartung'),margin,9);
+   if(p.timestamp)wrap('Erfasst am: '+p.timestamp,margin,9);
    wrap('Protokoll-Nr.: '+p.id,margin,10,true);wrap('Anlage: '+p.machine,margin);wrap('Datum: '+p.date,margin);wrap('Techniker: '+p.employee,margin);if(p.runtime)wrap('Betriebsstunden: '+p.runtime,margin);
    y+=3;wrap('PRÜF- UND WARTUNGSPUNKTE',margin,11,true);
    for(const [i,item] of (p.points||[]).entries())wrap(`${i+1}. ${item.title||item.name||'Prüfpunkt'}   -   ${item.status||'–'}`,margin,9,false);
@@ -562,18 +574,27 @@ async function loadMailPdf(){
 async function pdfForManualMail(p){
  if(!p?.id||!p.signature||!Array.isArray(p.points)||!Array.isArray(p.photos))throw Error('Originalprotokoll ist unvollständig.');
  const JsPDF=await loadMailPdf(),pdf=new JsPDF({format:'a4',unit:'mm'});
- const margin=16,usable=178;let y=43;
- const ensure=h=>{if(y+h>273){pdf.addPage();y=19;}};
+ const margin=16,usable=178;let y=45;
+ const logo=await imageToPdfData(ECB_WARTUNG_PDF_LOGO,'PNG');
+ if(!logo)throw Error('Original-Wartungslogo konnte nicht geladen werden.');
+ const drawHeader=()=>{
+   pdf.setFillColor(245,250,248);pdf.rect(0,0,210,38,'F');
+   pdf.addImage(logo.data,'PNG',margin,8,25,25);
+   pdf.setFont('helvetica','bold');pdf.setFontSize(14);pdf.setTextColor(32,68,55);
+   pdf.text('E.C.B. Reinigungssysteme GmbH',49,18);
+   pdf.setFont('helvetica','normal');pdf.setFontSize(9);
+   pdf.text('ECB Wartungssystem | Gespeichertes Wartungsprotokoll',49,25);
+   pdf.setDrawColor(88,151,82);pdf.line(margin,37,194,37);
+ };
+ drawHeader();
+ const ensure=h=>{if(y+h>273){pdf.addPage();drawHeader();y=45;}};
  const write=(str,size=10,strong=false)=>{
   pdf.setFont('helvetica',strong?'bold':'normal');pdf.setFontSize(size);pdf.setTextColor(39,61,45);
   for(const line of pdf.splitTextToSize(String(str??'–').replace(/[\r\n]+/g,' '),usable)){ensure(5.2);pdf.text(line,margin,y);y+=5.2;}
   y+=1.5;
  };
- const logo=await imageToPdfData(ECB_ASSETS.logo,'PNG');
- if(logo)pdf.addImage(logo.data,'PNG',margin,10,43,Math.min(23,43*logo.height/logo.width));
- pdf.setFont('helvetica','bold');pdf.setFontSize(14);pdf.text('E.C.B. Reinigungssysteme GmbH',66,20);
- pdf.setFont('helvetica','normal');pdf.setFontSize(9);pdf.text('Digitales Wartungsprotokoll',66,27);
- pdf.setDrawColor(88,151,82);pdf.line(margin,34,194,34);
+ write('Kategorie: '+(p.category||p.type||'Wartung'),9);
+ if(p.timestamp)write('Erfasst am: '+p.timestamp,9);
  write('Protokoll-Nr.: '+p.id,11,true);
  write('Maschine / Anlage: '+(p.machine||p.category||'Wartung'));
  write('Datum: '+(p.date||'–'));
