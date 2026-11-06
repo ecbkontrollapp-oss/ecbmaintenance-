@@ -1,0 +1,11 @@
+.backups/
+backups/
+node_modules/
+.env
+.env.*
+*.service-account.json
+serviceAccountKey.json
+firebase-adminsdk*.json
+approved-users.json
+tools/approved-users.json
+.DS_Store

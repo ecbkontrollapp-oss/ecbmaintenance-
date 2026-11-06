@@ -1,0 +1,53 @@
+name: Validate ECB Wartung staging (no Firebase writes)
+
+on:
+  push:
+    branches:
+      - sichere-anmeldung-und-altprotokolle-2026-11-05
+      - feature-admin-users-mail-2026-11-05
+  pull_request:
+    branches:
+      - main
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out staged source
+        uses: actions/checkout@v4
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Parse admin tools without executing them
+        run: |
+          node --check tools/backup-firestore.mjs
+          node --check tools/migrate-legacy-users.mjs
+          node --check tools/bootstrap-admin.mjs
+          node --check functions/index.js
+          node --check functions/pdf.mjs
+          node --check admin/ecb-admin.mjs
+      - name: Check JavaScript and synthetic historical Firestore data
+        run: node --test tools/test-staged.mjs
+      - name: Install test-only server dependencies
+        run: npm install --prefix functions --no-audit --no-fund
+      - name: Generate and inspect PDF with original logo, photo and signature
+        run: npm test --prefix functions
+
+      - name: Parse Firebase privileged functions without running or deploying
+        run: |
+          node --check functions/index.js
+          node --check functions/pdf.mjs
+          node --check functions/tests/static.test.mjs
+          node --check tools/bootstrap-admin.mjs
+      - name: Verify admin claims, password change, full PDF mail and no unapproved writes
+        run: node --test functions/tests/*.test.mjs
+
+      - name: Validate free email Worker without paid services
+        run: |
+          node --check free-mail-worker/src/index.js
+          node --check features/free-mail-client.mjs
+          node --test free-mail-worker/tests/*.test.mjs
