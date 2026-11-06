@@ -269,7 +269,7 @@ function formatDate(value){
  if(/^\d{4}-\d{2}-\d{2}$/.test(str)){const [y,m,d]=str.split('-');return d+'.'+m+'.'+y;}
  const d=new Date(str);return Number.isNaN(d.getTime())?str:d.toLocaleDateString('de-DE');
 }
-function pointTitle(item){return String(item?.title||item?.name||item?.label||'Prüfpunkt')}
+function pointTitle(item){return String(typeof item==='string'?item:(item?.title||item?.name||item?.label||'Prüfpunkt'))}
 function showSelected(){
  const p=selected();
  if(!p){$('send-btn').disabled=true;$('preview-btn').disabled=true;return;}
@@ -339,7 +339,7 @@ async function toImage(uri,type='PNG'){
 async function pdfFor(p){
  await loadPdfLibrary();
  if(!logoData)throw Error('Das Original-ECB-Logo fehlt.');
- if(!p?.machine||!Array.isArray(p.points)||!p.signature)throw Error('Pflichtfelder, Prüfpunkte oder Unterschrift fehlen.');
+ if(!(p?.machine||p?.category)||!Array.isArray(p.points)||!Array.isArray(p.photos)||!p.signature)throw Error('Pflichtfelder, Prüfpunkte, Fotodaten oder Unterschrift fehlen.');
  const pdf=new window.jspdf.jsPDF({format:'a4',unit:'mm'});
  let y=19;const margin=17,usable=176;
  const ensure=h=>{if(y+h>275){pdf.addPage();y=18;}};
@@ -355,7 +355,7 @@ async function pdfFor(p){
  pdf.setFont('helvetica','normal');pdf.setFontSize(9);pdf.text('Digitales Wartungsprotokoll',68,28);
  y=46;
  txt('Protokoll-Nr.: '+p.id,11,true);
- txt('Maschine: '+p.machine,10,true);txt('Datum: '+(p.date||''));txt('Techniker: '+(p.employee||p.technician||''));
+ txt('Maschine / Anlage: '+(p.machine||p.category),10,true);txt('Datum: '+(p.date||''));txt('Techniker: '+(p.employee||p.technician||''));
  if(p.runtime)txt('Betriebsstunden: '+p.runtime);
  y+=4;txt('PRÜFPUNKTE',11,true);
  for(const [idx,item] of p.points.entries())txt((idx+1)+'. '+(item.title||item.name||'Prüfung')+' – '+(item.status||'Offen'),9);
