@@ -77,6 +77,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
 .ecb-admin-row>div{min-width:0;overflow-wrap:anywhere}.ecb-admin-row small{display:block;color:#6e7e72}
 
 .ecb-user-subtitle{font-size:16px;margin:18px 0 10px;color:#2e5135}
+.ecb-invitation-info{border:1px solid #cce4d3;border-radius:12px;background:#f0f9f3;padding:12px 14px;min-height:96px}.ecb-invitation-info strong{display:block;font-size:13px;color:#256747;margin-bottom:6px}.ecb-invitation-info small{display:block;font-size:12px;line-height:1.5;color:#577461}.ecb-user-account-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end}.ecb-user-account-actions button{font-size:12px;white-space:nowrap}
 .ecb-users-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
 .ecb-users-grid input,.ecb-users-grid select{display:block;width:100%;min-height:48px;border:1px solid #cbdcce;border-radius:11px;padding:11px 12px;font:inherit;background:#fff;color:#1d3725}
 .ecb-users-grid .field{min-width:0}
@@ -231,7 +232,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
  </div>
  <div class="ecb-admin-card">
   <h2>Benutzerverwaltung</h2>
-  <p>Mitarbeiter direkt verwalten. Die Aktionen werden erst freigegeben, wenn Firebase die sichere Admin-Verbindung bestätigt.</p>
+  <p>Mitarbeiter verwalten und automatisch per E-Mail einladen. Die Einladung im ECB-Design enthält einen einmaligen Aktivierungslink zum Festlegen eines eigenen Passworts.</p>
   <div class="ecb-admin-warning" id="ecb-users-connect-status" role="status" aria-live="polite">Die sichere Firebase-Admin-Verbindung wird geprüft.</div>
   <div class="ecb-admin-actions">
    <button class="button primary" type="button" id="ecb-users-check">Admin-Verbindung prüfen</button>
@@ -243,10 +244,10 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
     <div class="ecb-users-grid">
      <div class="field"><label for="ecb-user-new-name">Vor- und Nachname</label><input id="ecb-user-new-name" type="text" maxlength="90" minlength="2" autocomplete="off" required placeholder="Name des Mitarbeiters"></div>
      <div class="field"><label for="ecb-user-new-email">E-Mail-Adresse</label><input id="ecb-user-new-email" type="email" required autocomplete="off" placeholder="mitarbeiter@firma.de"></div>
-     <div class="field"><label for="ecb-user-new-password">Startpasswort</label><input id="ecb-user-new-password" type="password" minlength="12" maxlength="128" required autocomplete="new-password" placeholder="Mindestens 12 Zeichen"></div>
+     <div class="field"><div class="ecb-invitation-info"><strong><span aria-hidden="true">✉</span> Automatische Einladung</strong><small>Der Mitarbeiter erhält eine professionell gestaltete E-Mail mit persönlichem Aktivierungslink. Das Passwort legt er selbst fest – es wird nicht per E-Mail verschickt.</small></div></div>
      <div class="field"><label for="ecb-user-new-role">Berechtigung</label><select id="ecb-user-new-role"><option value="staff">Mitarbeiter</option><option value="admin">Administrator</option></select></div>
     </div>
-    <button type="submit" class="button primary" id="ecb-users-create-submit">Mitarbeiter sicher anlegen</button>
+    <button type="submit" class="button primary" id="ecb-users-create-submit">Mitarbeiter anlegen & Einladung senden</button>
     <p class="muted ecb-user-result" id="ecb-users-create-result" aria-live="polite" role="status"></p>
    </form>
    <div class="ecb-user-divider"></div>
@@ -696,9 +697,26 @@ async function ecbAdminList(){
    const name=document.createElement('strong');name.textContent=user.name||'Mitarbeiter';
    const extra=document.createElement('small');extra.textContent=[user.email,user.role==='admin'?'Administrator':'Mitarbeiter',user.disabled?'Gesperrt':'Aktiv'].join(' · ');
    summary.append(name,extra);
-   const button=document.createElement('button');button.type='button';button.className='button subtle';button.textContent='Bearbeiten';
-   button.addEventListener('click',()=>ecbAdminEdit(user.uid));
-   row.append(summary,button);list.append(row);
+   const buttons=document.createElement('div');buttons.className='ecb-user-account-actions';
+   const edit=document.createElement('button');edit.type='button';edit.className='button subtle';edit.textContent='Bearbeiten';
+   edit.addEventListener('click',()=>ecbAdminEdit(user.uid));buttons.append(edit);
+   if(!user.disabled){
+     const invite=document.createElement('button');invite.type='button';invite.className='button subtle';invite.textContent='✉ Einladung senden';
+     invite.addEventListener('click',async()=>{
+       if(!window.ECB_ADMIN_API||!ecbUsersReady)return;
+       if(!confirm('Eine neue Aktivierungs-E-Mail an '+user.email+' senden?'))return;
+       invite.disabled=true;
+       ecbUsersMessage('ecb-users-list-status','Aktivierungs-E-Mail an '+user.email+' wird versendet …');
+       try{
+         const sent=await window.ECB_ADMIN_API('/admin/users/invite','POST',{uid:user.uid});
+         if(!sent.invitationSent)throw Error('Einladungsmail nicht bestätigt.');
+         ecbUsersMessage('ecb-users-list-status','✓ Einladungsmail an '+user.email+' wurde vom Versanddienst angenommen.');
+       }catch(e){ecbUsersMessage('ecb-users-list-status','Einladung nicht bestätigt: '+(e.message||e),true);}
+       finally{invite.disabled=false;}
+     });
+     buttons.append(invite);
+   }
+   row.append(summary,buttons);list.append(row);
   });
   ecbUsersMessage('ecb-users-list-status',ecbUsersList.length+' Benutzer geladen'+(result.more?' · weitere Konten sind im Firebase-Projekt vorhanden':'')+'.');
  }catch(e){ecbUsersMessage('ecb-users-list-status','Laden fehlgeschlagen: '+(e.message||e),true);}
@@ -728,18 +746,20 @@ document.getElementById('ecb-user-create-form').addEventListener('submit',async 
  if(!ecbUsersReady||!window.ECB_ADMIN_API)return;
  const name=document.getElementById('ecb-user-new-name').value.trim();
  const email=document.getElementById('ecb-user-new-email').value.trim().toLowerCase();
- const password=document.getElementById('ecb-user-new-password').value;
  const role=document.getElementById('ecb-user-new-role').value;
- if(password.length<12){ecbUsersMessage('ecb-users-create-result','Bitte mindestens 12 Zeichen als Startpasswort verwenden.',true);return;}
  const button=document.getElementById('ecb-users-create-submit');button.disabled=true;
  ecbUsersMessage('ecb-users-create-result','Konto wird sicher in Firebase angelegt …');
  try{
-  const created=await window.ECB_ADMIN_API('/admin/users/create','POST',{name,email,password,role});
+  const created=await window.ECB_ADMIN_API('/admin/users/create','POST',{name,email,role});
   document.getElementById('ecb-user-create-form').reset();
-  ecbUsersMessage('ecb-users-create-result','✓ Mitarbeiter '+created.email+' erfolgreich angelegt. Die Person kann sich mit ihren Zugangsdaten anmelden.');
+  if(created.invitationSent){
+    ecbUsersMessage('ecb-users-create-result','✓ Konto für '+created.email+' angelegt. Die persönliche Einladungs-E-Mail mit Aktivierungslink wurde vom Versanddienst angenommen.');
+  }else{
+    ecbUsersMessage('ecb-users-create-result','Das Konto für '+created.email+' wurde angelegt, die Einladungs-E-Mail jedoch nicht bestätigt. Bitte in der Benutzerliste auf „Einladung senden“ tippen. '+(created.invitationError||''),true);
+  }
   await ecbAdminList();
  }catch(e){ecbUsersMessage('ecb-users-create-result','Benutzeranlage nicht bestätigt: '+(e.message||e),true);}
- finally{button.disabled=false;document.getElementById('ecb-user-new-password').value='';}
+ finally{button.disabled=false;}
 });
 document.getElementById('ecb-user-edit-form').addEventListener('submit',async event=>{
  event.preventDefault();if(!ecbUsersReady||!window.ECB_ADMIN_API)return;
