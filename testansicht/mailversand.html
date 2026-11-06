@@ -1,0 +1,251 @@
+<!doctype html>
+<html lang="de">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>ECB Wartung – Mailversand prüfen</title>
+<style>
+:root{--deep:#27492d;--green:#4c852b;--line:#d9e2d6;--dim:#617266;--bg:#edf4e9;--red:#b32c29}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#1c3024;background:var(--bg)}
+main{max-width:820px;margin:0 auto;padding:22px 14px 60px}
+header,.panel{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 8px 26px #1e3e2020}
+header{display:flex;gap:20px;align-items:center;padding:22px;margin-bottom:15px}
+header img{width:86px;height:76px;object-fit:contain}
+h1{font-size:clamp(21px,5vw,30px);margin:0;color:var(--deep)}
+h2{font-size:19px;margin:0 0 9px}
+header p{margin:4px 0 0;color:var(--dim)}
+.panel{padding:25px;margin-bottom:15px}
+small, .muted{color:var(--dim);font-size:13px;line-height:1.55}
+.notice{background:#fff7e5;border:1px solid #e8d7aa;padding:13px 15px;border-radius:12px;margin-bottom:18px;font-size:13px}
+label{font-weight:650;display:block;margin:16px 0 7px}
+input,select{border:1px solid #cbd9c8;background:#fff;padding:14px;border-radius:12px;color:#17311d;width:100%;font:inherit}
+input:focus,select:focus{outline:2px solid #9bc48b}
+button{cursor:pointer;border:0;border-radius:12px;padding:14px 19px;background:var(--green);color:white;font-weight:700;font:inherit}
+button:disabled{opacity:.57;cursor:default}
+.button-light{background:#e7eee2;color:var(--deep)}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+.row button{flex:1;min-width:180px}
+.status{margin-top:16px;min-height:25px;font-size:14px;line-height:1.5;white-space:pre-wrap}
+.ok{color:#286d38}.err{color:var(--red)}
+.hidden{display:none!important}
+#count{color:var(--dim)}
+footer{text-align:center;color:#6c7f71;font-size:12px;padding:15px}
+</style>
+<script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js" crossorigin="anonymous"></script>
+</head>
+<body>
+<main>
+<header>
+<img id="ecb-logo" alt="ECB Original-Logo">
+<div><h1>ECB Wartungssystem</h1><p>E.C.B. Reinigungssysteme GmbH</p><p><strong>Prüfung des kostenlosen E-Mail-Versands</strong></p></div>
+</header>
+<div class="notice"><strong>Testansicht – keine Änderungen an Firebase.</strong> Es werden vorhandene Wartungsprotokolle nur gelesen. Es wird erst eine echte Test-E-Mail an <b>pb@ecb-system.de</b> gesendet, wenn du den Versand ausdrücklich bestätigst.</div>
+<section id="login-panel" class="panel">
+<h2>Anmeldung</h2>
+<p class="muted">Verwende denselben Firebase-Benutzer wie in der bereits funktionierenden Wartungs-Testansicht.</p>
+<form id="login-form">
+<label for="username">Benutzername</label>
+<input id="username" autocomplete="username" placeholder="ECB_Wartung" required>
+<label for="password">Passwort</label>
+<input id="password" type="password" autocomplete="current-password" required>
+<div class="row"><button id="login-btn" type="submit">Mit Firebase anmelden</button></div>
+</form>
+<p id="login-status" class="status" role="status"></p>
+</section>
+<section id="list-panel" class="panel hidden">
+<h2>Gespeicherte Wartungsprotokolle</h2>
+<p class="muted">Es werden ausschließlich direkt gespeicherte Originaldokumente geladen. Fehlende Fotos oder Unterschriften verhindern den Versand.</p>
+<label for="report">Protokoll wählen <span id="count"></span></label>
+<select id="report"></select>
+<div id="details" class="muted" style="margin-top:14px"></div>
+<div class="row">
+<button type="button" class="button-light" id="preview-btn">PDF herunterladen</button>
+<button type="button" id="send-btn">Test-E-Mail an pb@ecb-system.de senden</button>
+</div>
+<p id="mail-status" class="status" role="status"></p>
+<p class="muted">Absender: <b>ECB Wartung &lt;wartung@bgf-elektro.com&gt;</b>. Der Versand wird gegen die bereits gespeicherte Firebase-Datei geprüft; der Inhalt wird nicht verändert.</p>
+</section>
+<footer>ECB Wartung – gesonderter PDF-/Mail-Funktionstest · keine Firebase-Schreibvorgänge</footer>
+</main>
+<script type="module">
+import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
+import {getAuth,signInWithEmailAndPassword,setPersistence,browserSessionPersistence} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import {getFirestore,collection,getDocsFromServer} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
+const $=id=>document.getElementById(id);
+const worker='https://ecb-wartung-free-mail.ecbmaintenance-mail.workers.dev/send-protocol';
+const app=initializeApp({
+ apiKey:'AIzaSyDAYbTwQd8aDeTSHzuxWtEVon6SHIVRB5k',
+ authDomain:'ecb-maintenance.firebaseapp.com',
+ projectId:'ecb-maintenance',
+ appId:'1:229926423123:web:a309c14c708fc886c62d4a6'
+},'ecb-mail-test');
+const auth=getAuth(app),db=getFirestore(app);
+let protocols=[],sentAttempted=false,logoData='';
+const msg=(id,content,good)=>{const el=$(id);el.textContent=String(content||'');el.className='status '+(good===true?'ok':good===false?'err':'');};
+const imgData=v=>typeof v==='string'?v:(v?.dataUrl||v?.data||v?.url||v?.src||'');
+async function loadLogo(){
+ const txt=await fetch('./ecb-logo.b64',{cache:'no-store'}).then(async r=>{if(!r.ok)throw Error('Logo-Datei nicht erreichbar.');return r.text()});
+ logoData='data:image/webp;base64,'+txt.trim();
+ $('ecb-logo').src=logoData;
+}
+loadLogo().catch(err=>{msg('login-status','Das ECB-Logo konnte nicht geladen werden: '+err.message,false);});
+async function alias(username){
+ const str=username.normalize('NFKC').trim().toLocaleLowerCase('de-DE');
+ if(str.length<1||str.length>80)throw Error('Ungültiger Benutzername.');
+ const hash=new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(str)));
+ return 'u'+Array.from(hash,x=>x.toString(16).padStart(2,'0')).join('').slice(0,48)+'@accounts.ecb.invalid';
+}
+function dataScore(p){
+ return (p.signature?100:0)+(Array.isArray(p.points)?p.points.length:0)+(Array.isArray(p.photos)?p.photos.length*10:0)+(p.machine?5:0);
+}
+async function listProtocols(){
+ const sources=[
+  {key:'ecb_protocols',ref:collection(db,'ecb_protocols'),prefix:'ecb_protocols'},
+  {key:'legacy',ref:collection(db,'artifacts','ecb-maintenance','public','data','protocols'),prefix:'artifacts/ecb-maintenance/public/data/protocols'},
+  {key:'live',ref:collection(db,'artifacts','ecb-maintenance-live','public','data','protocols'),prefix:'artifacts/ecb-maintenance-live/public/data/protocols'}
+ ];
+ const byId=new Map(),errors=[];
+ for(const source of sources){
+  try{
+   const snap=await getDocsFromServer(source.ref);
+   for(const record of snap.docs){
+    const p=record.data(),id=String(p.id||record.id);
+    if(!id)continue;
+    const existing=byId.get(id);
+    const copy={...p,id,__path:source.prefix+'/'+record.id};
+    if(!existing||dataScore(copy)>dataScore(existing))byId.set(id,copy);
+   }
+  }catch(e){errors.push(source.key+': '+(e.code||e.message||'unbekannt'));}
+ }
+ protocols=Array.from(byId.values()).sort((a,b)=>new Date(b.timestamp||b.date||0)-new Date(a.timestamp||a.date||0));
+ const select=$('report');select.textContent='';
+ for(const p of protocols){
+  const option=document.createElement('option');option.value=p.__path;
+  option.textContent=p.id+' · '+String(p.machine||p.category||'Wartung')+' · '+String(p.date||'');
+  select.appendChild(option);
+ }
+ $('count').textContent='('+protocols.length+' geladen)';
+ $('list-panel').classList.remove('hidden');
+ $('login-panel').classList.add('hidden');
+ if(!protocols.length){
+  $('send-btn').disabled=true;$('preview-btn').disabled=true;
+  msg('mail-status',errors.length?'Kein Originalprotokoll geladen. Probleme mit Quellen: '+errors.join(' / '):'Noch keine Wartungsprotokolle vorhanden.',false);
+ }else if(errors.length){
+  msg('mail-status','Hinweis: Einige Firebase-Sammlungen sind nicht lesbar. '+errors.join(' / '),false);
+ }else msg('mail-status','Firebase hat die vorhandenen Protokolle bestätigt. Bitte zunächst ein älteres Protokoll auswählen.',true);
+ showSelected();
+}
+function selected(){return protocols.find(p=>p.__path===$('report').value)}
+function showSelected(){
+ const p=selected();if(!p)return;
+ const fotos=Array.isArray(p.photos)?p.photos.length:0,signature=Boolean(imgData(p.signature)),points=Array.isArray(p.points)?p.points.length:0;
+ $('details').textContent='Prüfpunkte: '+points+' | Originalfotos: '+fotos+' | Unterschrift: '+(signature?'vorhanden':'fehlt');
+ $('send-btn').disabled=sentAttempted||!signature;
+ $('preview-btn').disabled=!signature;
+}
+$('report').addEventListener('change',()=>{showSelected();msg('mail-status','',null)});
+$('login-form').addEventListener('submit',async e=>{
+ e.preventDefault();
+ const btn=$('login-btn');btn.disabled=true;msg('login-status','Firebase-Anmeldung wird geprüft …');
+ try{
+  await setPersistence(auth,browserSessionPersistence);
+  const user=await signInWithEmailAndPassword(auth,await alias($('username').value),$('password').value);
+  if(!user.user)throw Error('Benutzer nicht bestätigt.');
+  $('password').value='';msg('login-status','Anmeldung erfolgreich. Originalprotokolle werden geladen …',true);
+  await listProtocols();
+ }catch(err){msg('login-status','Anmeldung oder Firestore-Zugriff fehlgeschlagen: '+(err.code||err.message),false);btn.disabled=false;}
+});
+async function toImage(uri,type='PNG'){
+ if(!uri)throw Error('Ein Originalbild oder die Unterschrift fehlt.');
+ const image=new Image();image.crossOrigin='anonymous';
+ return new Promise((resolve,reject)=>{
+  image.onerror=()=>reject(Error('Originalbild nicht erreichbar – keine unvollständige PDF.'));
+  image.onload=()=>{
+   try{
+    const scale=Math.min(1,1600/Math.max(image.naturalWidth,image.naturalHeight));
+    const w=Math.max(1,Math.round(scale*image.naturalWidth)),h=Math.max(1,Math.round(scale*image.naturalHeight));
+    const canvas=document.createElement('canvas');canvas.width=w;canvas.height=h;
+    const ctx=canvas.getContext('2d');
+    if(!ctx)throw Error('Keine Canvas-Funktion verfügbar.');
+    if(type==='JPEG'){ctx.fillStyle='#fff';ctx.fillRect(0,0,w,h);}
+    ctx.drawImage(image,0,0,w,h);
+    resolve({data:canvas.toDataURL(type==='JPEG'?'image/jpeg':'image/png',type==='JPEG'?.83:undefined),width:w,height:h});
+   }catch(error){reject(error);}
+  };
+  image.src=uri;
+ });
+}
+async function pdfFor(p){
+ if(!window.jspdf?.jsPDF)throw Error('PDF-Bibliothek ist noch nicht geladen.');
+ if(!logoData)throw Error('Das Original-ECB-Logo fehlt.');
+ if(!p?.machine||!Array.isArray(p.points)||!p.signature)throw Error('Pflichtfelder, Prüfpunkte oder Unterschrift fehlen.');
+ const pdf=new window.jspdf.jsPDF({format:'a4',unit:'mm'});
+ let y=19;const margin=17,usable=176;
+ const ensure=h=>{if(y+h>275){pdf.addPage();y=18;}};
+ const txt=(t,sz=10,strong=false)=>{
+  pdf.setFont('helvetica',strong?'bold':'normal');pdf.setFontSize(sz);pdf.setTextColor(35,50,42);
+  for(const row of pdf.splitTextToSize(String(t??'–').replace(/[\r\n]/g,' '),usable)){
+   ensure(5);pdf.text(row,margin,y);y+=5;
+  }y+=2;
+ };
+ const logo=await toImage(logoData,'PNG');
+ pdf.addImage(logo.data,'PNG',margin,11,42,Math.min(25,42*logo.height/logo.width));
+ pdf.setFont('helvetica','bold');pdf.setFontSize(14);pdf.text('E.C.B. Reinigungssysteme GmbH',68,22);
+ pdf.setFont('helvetica','normal');pdf.setFontSize(9);pdf.text('Digitales Wartungsprotokoll',68,28);
+ y=46;
+ txt('Protokoll-Nr.: '+p.id,11,true);
+ txt('Maschine: '+p.machine,10,true);txt('Datum: '+(p.date||''));txt('Techniker: '+(p.employee||p.technician||''));
+ if(p.runtime)txt('Betriebsstunden: '+p.runtime);
+ y+=4;txt('PRÜFPUNKTE',11,true);
+ for(const [idx,item] of p.points.entries())txt((idx+1)+'. '+(item.title||item.name||'Prüfung')+' – '+(item.status||'Offen'),9);
+ if(p.remarks){y+=4;txt('BEMERKUNGEN',11,true);txt(p.remarks,9);}
+ const photos=Array.isArray(p.photos)?p.photos:[];
+ y+=4;txt('ORIGINALFOTOS: '+photos.length,10,true);
+ for(const [idx,photo] of photos.entries()){
+  const image=await toImage(imgData(photo),'JPEG');
+  const ratio=Math.min(1,usable/(image.width*.26458),95/(image.height*.26458));
+  const w=image.width*.26458*ratio,h=image.height*.26458*ratio;
+  ensure(h+16);txt('Foto '+(idx+1),9,true);
+  ensure(h+8);pdf.addImage(image.data,'JPEG',margin,y,w,h);y+=h+9;
+ }
+ const sig=await toImage(imgData(p.signature),'PNG');
+ y+=3;txt('ORIGINAL-UNTERSCHRIFT',11,true);
+ const ratio=Math.min(1,120/(sig.width*.26458),40/(sig.height*.26458));
+ const w=sig.width*.26458*ratio,h=sig.height*.26458*ratio;
+ ensure(h+9);pdf.addImage(sig.data,'PNG',margin,y,w,h);
+ const pages=pdf.getNumberOfPages();
+ for(let pg=1;pg<=pages;pg++){pdf.setPage(pg);pdf.setFontSize(8);pdf.setTextColor(90);pdf.text('ECB Wartung | '+p.id+' | '+pg+' / '+pages,margin,289);}
+ const b64=pdf.output('datauristring').split(',')[1];
+ if(!b64||b64.length>8*1024*1024)throw Error('PDF ist zu groß für den kostenlosen E-Mail-Versand.');
+ return {pdf,b64};
+}
+$('preview-btn').addEventListener('click',async()=>{
+ const p=selected();if(!p)return;const button=$('preview-btn');button.disabled=true;
+ try{msg('mail-status','PDF mit Originalbildern wird erstellt …');const file=await pdfFor(p);
+  file.pdf.save('ECB_Protokoll_'+p.id.replace(/[^A-Za-z0-9-_]/g,'_')+'.pdf');
+  msg('mail-status','PDF heruntergeladen. Jetzt kannst du den Versand testen.',true);
+ }catch(e){msg('mail-status',e.message,false)}finally{button.disabled=false;}
+});
+$('send-btn').addEventListener('click',async()=>{
+ const p=selected();if(!p||sentAttempted)return;
+ if(!confirm('Test-E-Mail mit PDF von '+p.id+' wirklich an pb@ecb-system.de senden?'))return;
+ sentAttempted=true;$('send-btn').disabled=true;$('preview-btn').disabled=true;
+ try{
+  msg('mail-status','Original-PDF wird erstellt und die E-Mail einmalig angefordert …');
+  const {b64}=await pdfFor(p);
+  const user=auth.currentUser;if(!user)throw Error('Firebase-Sitzung abgelaufen. Seite neu laden.');
+  const token=await user.getIdToken(true);
+  const requestId=crypto.randomUUID();
+  const response=await fetch(worker,{method:'POST',headers:{
+    'Authorization':'Bearer '+token,'Content-Type':'application/json'
+   },body:JSON.stringify({mode:'manual',protocolId:p.id,sourcePath:p.__path,
+    recipient:'pb@ecb-system.de',requestId,pdfBase64:b64})});
+  const result=await response.json().catch(()=>({}));
+  if(!response.ok||!result.ok)throw Error(result.error||'Cloudflare hat die E-Mail nicht bestätigt (HTTP '+response.status+').');
+  msg('mail-status','Resend hat den Auftrag bestätigt. Protokoll '+p.id+' wurde einmalig an pb@ecb-system.de gesendet. Versand-ID: '+result.jobId,true);
+ }catch(e){
+  msg('mail-status','Versand nicht bestätigt: '+(e.message||e)+'. Bitte nicht erneut senden, bevor wir den Fehler geprüft haben.',false);
+ }
+});
+</script>
+</body></html>
