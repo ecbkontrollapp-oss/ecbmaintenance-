@@ -1,6 +1,7 @@
 // No-charge mail gateway for the ECB Wartung app.
 // Cloudflare Workers Free + D1 Free + Resend Free. No Firebase Cloud Functions needed for email.
-// NOT DEPLOYED: domain verification, secrets and end-to-end validation are required.
+// Free-tier BGF sender. The signed existing owner login may send before staff-role migration;
+// all other users require explicit Firebase custom claim and active staff profile.
 const KEYS='https://www.googleapis.com/service_accounts/v1/jwk/securetoken@system.gserviceaccount.com';
 const MAIL='https://api.resend.com/emails';
 const json=(data,status=200,origin='')=>new Response(JSON.stringify(data),{
@@ -12,7 +13,7 @@ const emailPattern=/^[A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}$/i;
 const segment=/^[a-zA-Z0-9_.-]{1,140}$/;
 const b64url=input=>Uint8Array.from(atob(input.replace(/-/g,'+').replace(/_/g,'/')+'='.repeat((4-input.length%4)%4)),c=>c.charCodeAt(0));
 const digest=async value=>Array.from(new Uint8Array(await crypto.subtle.digest('SHA-256',new TextEncoder().encode(value))),x=>x.toString(16).padStart(2,'0')).join('');
-const readJwt=async(value,project)=>{
+const readJwt=async(value,project,ownerEmail)=>{
  if(!value||value.length>8192)throw error('Firebase-Anmeldung fehlt.',401);
  const pieces=value.split('.');if(pieces.length!==3)throw error('Ungültige Firebase-Sitzung.',401);
  let h,p;
@@ -32,8 +33,9 @@ const readJwt=async(value,project)=>{
  const valid=await crypto.subtle.verify('RSASSA-PKCS1-v1_5',key,b64url(pieces[2]),new TextEncoder().encode(pieces[0]+'.'+pieces[1]));
  if(!valid)throw error('Ungültige Firebase-Signatur.',401);
  // Admin/staff grants are created exclusively through verified backend operations.
- if(p.ecbStaff!==true)throw error('Mitarbeiterkonto noch nicht freigeschaltet.',403);
- return p;
+ const isOwner=!!ownerEmail&&typeof p.email==='string'&&p.email.toLowerCase()===ownerEmail.toLowerCase()&&p.firebase?.sign_in_provider==='password';
+ if(p.ecbStaff!==true&&!isOwner)throw error('Mitarbeiterkonto noch nicht freigeschaltet.',403);
+ return {...p,_ecbOwner:isOwner};
 };
 const firestoreValue=v=>{
  if(!v||typeof v!=='object')return null;
@@ -89,8 +91,8 @@ async function send(request,env){
  const authHeader=request.headers.get('Authorization')||'';
  if(!authHeader.startsWith('Bearer '))throw error('Bitte bei ECB Wartung anmelden.',401);
  const token=authHeader.slice(7),project=env.FIREBASE_PROJECT_ID||'ecb-maintenance';
- const claims=await readJwt(token,project);
- await ensureProfile(project,claims.sub,token);
+ const claims=await readJwt(token,project,env.OWNER_AUTH_EMAIL);
+ if(!claims._ecbOwner)await ensureProfile(project,claims.sub,token);
  const contentLength=Number(request.headers.get('content-length')||0);
  if(contentLength>13*1024*1024)throw error('PDF ist für den kostenlosen Versand zu groß.',413);
  let data;try{data=await request.json()}catch{throw error('Ungültige Versanddaten.')}
