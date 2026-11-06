@@ -78,11 +78,18 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
 .ecb-account-form{max-width:520px}.ecb-account-form .field{margin:12px 0}.ecb-account-form input{width:100%;min-height:49px}
 @media(max-width:730px){.ecb-admin-card{padding:16px}.ecb-admin-metrics{grid-template-columns:1fr 1fr}.ecb-admin-actions>*{flex:1}.sidebar .nav-btn[data-page="admin"]{font-size:9px}}
 </style>
+<style id="ecb-approved-brand-header">
+/* Freigegebenes ECB Wartungssystem App-Symbol: Header und PC-Seitenleiste. */
+.ecb-approved-app-badge {width:56px;height:56px;flex:none;display:grid;place-items:center;border-radius:15px;padding:0;border:0;background:transparent;overflow:hidden;box-shadow:0 4px 13px rgba(14,38,34,.18)}
+.ecb-approved-app-badge img {display:block;width:100%;height:100%;object-fit:contain}
+.ecb-desktop-topbar-badge {width:43px;height:43px;object-fit:contain;border-radius:12px;flex:none;filter:drop-shadow(0 2px 5px rgba(0,0,0,.1))}
+@media(max-width:730px){.mobile-brand .ecb-approved-app-badge{width:44px;height:44px;border-radius:12px}.mobile-brand .ecb-approved-app-badge img{width:100%;height:100%}}
+</style>
 </head>
 <body>
 <div class="layout">
  <aside class="sidebar">
-  <div class="brand"><div class="logo-plate original-logo-plate"><img data-ecb-logo alt="Original ECB Firmenlogo" /></div><div><strong>ECB<br>Reinigungssysteme</strong><small>Digitales Wartungssystem</small></div></div>
+  <div class="brand"><div class="logo-plate ecb-approved-app-badge"><img src="./icons/icon-192.png?v=ecb-approved-header-1" alt="ECB Wartungssystem – freigegebenes App-Symbol mit Schraubenschlüssel und Zahnrad" width="54" height="54" decoding="async" /></div><div><strong>ECB<br>Reinigungssysteme</strong><small>Digitales Wartungssystem</small></div></div>
   <div><div class="nav-label">Arbeitsplatz</div><nav class="nav" aria-label="Hauptnavigation">
    <button class="nav-btn active" data-page="dashboard"><span class="ico">▦</span> Übersicht</button>
    <button class="nav-btn" data-page="calendar"><span class="ico">▤</span> Wartungskalender</button>
@@ -93,7 +100,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
   </nav></div>
   <div class="side-bottom"><div class="cloud-state"><span class="pulse"></span><div><b id="sync-label">Firebase: wird verbunden</b><span id="sync-detail">Geschützte Anmeldung erforderlich</span></div></div><div class="profile"><div class="avatar">EC</div><div><b>ECB Wartung</b><small>Wartung & Prüfung</small></div></div></div>
  </aside>
- <div class="app-main"><header class="topbar"><div class="mobile-brand"><div class="logo-plate original-logo-plate"><img data-ecb-logo alt="Original ECB Firmenlogo" /></div><strong>ECB Wartung</strong></div><div class="breadcrumb">ECB Reinigungssysteme <span>›</span> <strong id="breadcrumb-current">Übersicht</strong></div><div class="top-right"><span class="datetime" id="today-label"></span><span class="cloud-badge" id="cloud-pill">Anmeldung erforderlich</span><span class="top-icon" aria-label="Benachrichtigungen">♧</span></div></header>
+ <div class="app-main"><header class="topbar"><div class="mobile-brand"><div class="logo-plate ecb-approved-app-badge"><img src="./icons/icon-192.png?v=ecb-approved-header-1" alt="ECB Wartungssystem – freigegebenes App-Symbol mit Schraubenschlüssel und Zahnrad" width="54" height="54" decoding="async" /></div><strong>ECB Wartung</strong></div><div class="breadcrumb"><img class="ecb-desktop-topbar-badge" src="./icons/icon-192.png?v=ecb-approved-header-1" alt="ECB Wartungssystem App-Symbol" width="43" height="43" decoding="async"> ECB Reinigungssysteme <span>›</span> <strong id="breadcrumb-current">Übersicht</strong></div><div class="top-right"><span class="datetime" id="today-label"></span><span class="cloud-badge" id="cloud-pill">Anmeldung erforderlich</span><span class="top-icon" aria-label="Benachrichtigungen">♧</span></div></header>
  <main class="content"><section id="auth-panel" class="panel" style="max-width:640px;margin:0 auto 23px;padding:27px;border:1px solid #d4e5cd;background:linear-gradient(145deg,#fff,#f4faef)">
  <div class="eyebrow">Geschützter Zugriff</div><h2 style="margin:7px 0 5px">Mit Firebase anmelden</h2>
  <p style="color:#6a7d71;margin-bottom:18px">Aus Datenschutzgründen werden Protokolle, Dokumentationsfotos und Unterschriften erst nach einer bestätigten Firebase-Anmeldung geladen.</p>
