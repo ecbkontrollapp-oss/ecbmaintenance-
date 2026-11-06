@@ -41,6 +41,19 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
 @media(max-width:650px){#report-content .report-photos{grid-template-columns:1fr}}
 </style>
 <script defer src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js" crossorigin="anonymous"></script>
+
+<style id="ecb-optional-email-style">
+.ecb-saved-alert{display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap;margin:14px 0 18px;padding:18px 21px;background:linear-gradient(115deg,#eff8e9,#fff);border:1px solid #b7d6aa;border-radius:16px}
+.ecb-saved-alert strong{color:#345b32;font-size:16px}.ecb-saved-alert p{color:#607363;font-size:13px;margin:5px 0}.ecb-saved-alert .actions{display:flex;gap:9px;flex-wrap:wrap}
+.ecb-send-summary{display:grid;grid-template-columns:1fr 1fr;gap:9px;margin:15px 0}
+.ecb-send-summary div{background:#f3f8ef;padding:12px;border-radius:10px;overflow-wrap:anywhere}
+.ecb-send-summary small{display:block;color:#708071;margin-bottom:4px}.ecb-send-summary strong{font-size:13px;color:#29482f}
+.ecb-send-label{display:block;font-weight:700;margin:12px 0 5px}
+.ecb-send-input{padding:12px;border:1px solid #bccfbc;border-radius:10px;width:100%;font:inherit}
+.ecb-send-hint{padding:12px;margin:12px 0;background:#edf5e9;color:#486349;border-radius:10px;font-size:13px}
+.ecb-send-result{margin-top:10px;font-size:13px;line-height:1.5;white-space:pre-wrap}
+@media(max-width:680px){.ecb-saved-alert .actions{width:100%}.ecb-saved-alert .actions button{flex:1}}
+</style>
 </head>
 <body>
 <div class="layout">
@@ -118,9 +131,9 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
  <section id="view-calendar" class="view"><div class="hero"><div><div class="eyebrow">Termine und Intervalle</div><h1>Wartungskalender</h1><p>Fälligkeiten aus den tatsächlich gespeicherten Wartungen. Fehlende Daten werden ausdrücklich gekennzeichnet.</p></div><button class="button primary" data-action="new">＋ Wartung erfassen</button></div><div class="calendar-grid" id="calendar-cards"></div></section>
  <section id="view-retro" class="view"><div class="hero"><div><div class="eyebrow">Nachträgliche Dokumentation</div><h1>Wartung nachtragen</h1><p>Historische Arbeiten mit originalem Datum, Uhrzeit und zuständigem Techniker erfassen.</p></div></div><div class="panel form-panel"><div class="field-grid"><div class="field"><label for="retro-type">Anlage / Wartungsart</label><select id="retro-type"><option value="wash">Milnor Waschmaschine</option><option value="dry">Trockner</option><option value="comp">Kompressor 2-Wochen</option><option value="annual">Kompressor umfangreiche Wartung</option></select></div><div class="field"><label for="retro-machine">Maschine</label><select id="retro-machine"><option>1</option><option>2</option><option>3</option><option>4</option></select></div><div class="field"><label for="retro-date">Durchführungsdatum</label><input type="date" id="retro-date" value="2026-11-04"></div><div class="field"><label for="retro-time">Uhrzeit</label><input type="time" id="retro-time" value="08:00"></div><div class="field" style="grid-column:1/-1"><label for="retro-name">Techniker</label><input id="retro-name" placeholder="Name eingeben"></div></div><div style="margin-top:20px"><button class="button primary" id="retro-next">Prüfpunkte öffnen →</button></div></div></section>
  <section id="view-dguv" class="view"><div class="hero"><div><div class="eyebrow">Prüfmanagement</div><h1>DGUV V3 Prüfungen</h1><p>Gerätebestand, Prüffälligkeiten und zugehörige Messprotokolle – übersichtlich dokumentiert.</p></div><button class="button subtle" data-action="dguv">Gerätebestand ansehen</button></div><div class="metric-grid" style="margin-bottom:20px"><div class="metric"><div class="metric-top">Erfasste Geräte</div><strong id="dguv-total">–</strong></div><div class="metric"><div class="metric-top">Geprüft</div><strong id="dguv-completed">–</strong></div><div class="metric"><div class="metric-top">Bald fällig</div><strong id="dguv-due">–</strong></div><div class="metric"><div class="metric-top">Dokumente</div><strong id="dguv-attachments">–</strong></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Gerät</th><th>Inventarnr.</th><th>Standort</th><th>Fällig</th><th>Status</th><th>Aktion</th></tr></thead><tbody id="dguv-body"></tbody></table></div></section>
- <section id="view-history" class="view"><div class="hero"><div><div class="eyebrow">Archiv und Dokumentation</div><h1>Gespeicherte Protokolle</h1><p>Alle Wartungsnachweise inklusive Checklisten, Fotos und Unterschriften im Blick.</p></div><button class="button subtle" id="cloud-backup" title="Freigabe nach Prüfung der Firebase-Zugriffsregeln" disabled>Cloud-Sicherung nach Sicherheitsprüfung</button></div><div class="toolbar"><input class="search" id="history-search" placeholder="⌕  Protokoll, Anlage oder Techniker suchen ..."><select class="select" id="history-filter"><option value="all">Alle Kategorien</option><option value="Waschmaschine">Waschmaschinen</option><option value="Trockner">Trockner</option><option value="Kompressor">Kompressoren</option></select><button class="button subtle" id="reset-filter">Zurücksetzen</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Protokoll</th><th>Maschine</th><th>Datum</th><th>Techniker</th><th>Ergebnis</th><th>Aktion</th></tr></thead><tbody id="history-body"></tbody></table></div><p class="muted" style="margin-top:15px">Die bisherigen echten Protokolle werden hier im Entwurf bewusst nicht angezeigt oder bearbeitet.</p></section>
+ <section id="view-history" class="view"><div class="hero"><div><div class="eyebrow">Archiv und Dokumentation</div><h1>Gespeicherte Protokolle</h1><p>Alle Wartungsnachweise inklusive Checklisten, Fotos und Unterschriften im Blick.</p></div><button class="button subtle" id="cloud-backup" title="Freigabe nach Prüfung der Firebase-Zugriffsregeln" disabled>Cloud-Sicherung nach Sicherheitsprüfung</button></div><div id="ecb-saved-alert" class="ecb-saved-alert" style="display:none"><div><strong>✓ In der Cloud gespeichert</strong><p id="ecb-saved-label">Das Wartungsprotokoll ist sicher gespeichert. Der E-Mail-Versand ist optional.</p></div><div class="actions"><button type="button" class="button primary" id="ecb-mail-last">✉ Per E-Mail versenden</button><button type="button" class="button subtle" id="ecb-mail-later">Später</button></div></div><div class="toolbar"><input class="search" id="history-search" placeholder="⌕  Protokoll, Anlage oder Techniker suchen ..."><select class="select" id="history-filter"><option value="all">Alle Kategorien</option><option value="Waschmaschine">Waschmaschinen</option><option value="Trockner">Trockner</option><option value="Kompressor">Kompressoren</option></select><button class="button subtle" id="reset-filter">Zurücksetzen</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Protokoll</th><th>Maschine</th><th>Datum</th><th>Techniker</th><th>Ergebnis</th><th>Aktion</th></tr></thead><tbody id="history-body"></tbody></table></div><p class="muted" style="margin-top:15px">Die bisherigen echten Protokolle werden hier im Entwurf bewusst nicht angezeigt oder bearbeitet.</p></section>
  <section id="view-form" class="view"><div class="hero"><div><div class="eyebrow">Digitale Wartung</div><h1 id="form-title">Wartungsprotokoll</h1><p>Prüfpunkte, Fotos und Unterschrift werden zusammen als Protokoll gespeichert. Speichern ist erst bei bestätigter Cloud-Verbindung möglich.</p></div><button class="button subtle" data-page="dashboard">← Übersicht</button></div><div class="form-machine-banner" id="form-machine-banner"><img id="form-machine-photo" alt="Originalaufnahme der Maschine"><div><span>ECB SERVICE</span><strong id="form-machine-photo-title">Digitale Wartung</strong></div></div><div class="panel form-panel"><div class="field-grid"><div class="field"><label for="form-machine">Anlage</label><select id="form-machine"></select></div><div class="field"><label for="form-name">Techniker</label><input id="form-name" placeholder="Name des Technikers"></div><div class="field"><label for="form-runtime">Betriebsstunden (optional)</label><input id="form-runtime" type="text" inputmode="decimal" placeholder="Aktueller Betriebsstundenzähler"></div></div><h3 style="margin:23px 0 5px">Prüf- und Wartungspunkte</h3><p class="muted" style="margin:0 0 8px">Bitte je Prüfpunkt OK oder Mangel auswählen.</p><div id="checklist"></div><div class="field" style="margin-top:18px"><label for="form-notes">Bemerkungen</label><textarea id="form-notes" placeholder="Feststellungen und zusätzliche Hinweise"></textarea></div><div class="field" style="margin-top:15px"><label for="cloud-photo">Dokumentationsfotos (werden im Originalprotokoll gespeichert)</label><input id="cloud-photo" type="file" accept="image/*" multiple></div><div id="photo-names" class="muted" style="margin-top:6px"></div><div class="field" style="margin-top:15px"><label>Unterschrift</label><canvas id="signature" width="730" height="170" aria-label="Hier mit dem Finger unterschreiben" style="touch-action:none !important;-ms-touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;display:block;width:100%;height:170px;border:2px solid #b5d399;border-radius:13px;background:#fff;cursor:crosshair"></canvas><small style="color:#54813b;font-size:11px">Mit dem Finger im weißen Feld unterschreiben. Die Seite bleibt dabei stehen.</small><button class="link" id="clear-sign" style="align-self:flex-end">Unterschrift löschen</button></div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px"><button class="button primary" id="save-protocol">✓ Protokoll in Firebase speichern</button><button class="button subtle" data-page="dashboard">Abbrechen</button></div></div></section>
- <section id="view-preview" class="view"><div class="hero"><div><div class="eyebrow">Protokollvorschau</div><h1>Digitales Wartungsprotokoll</h1><p>ECB-Protokoll mit Prüfpunkten, Fotos und Unterschrift – direkt aus der Cloud.</p></div><button class="button subtle" data-page="history">← Archiv</button></div><div class="panel form-panel" id="report-content"></div><div style="margin-top:16px"><button class="button primary" id="print-report">PDF mit Bildern und Unterschrift herunterladen</button></div></section>
+ <section id="view-preview" class="view"><div class="hero"><div><div class="eyebrow">Protokollvorschau</div><h1>Digitales Wartungsprotokoll</h1><p>ECB-Protokoll mit Prüfpunkten, Fotos und Unterschrift – direkt aus der Cloud.</p></div><button class="button subtle" data-page="history">← Archiv</button></div><div class="panel form-panel" id="report-content"></div><div style="margin-top:16px"><button class="button primary" id="print-report">PDF mit Bildern und Unterschrift herunterladen</button> <button class="button subtle" type="button" id="ecb-mail-preview">✉ Per E-Mail versenden</button></div></section>
  <div class="footer-note">© E.C.B. Reinigungssysteme GmbH · Digitales Wartungssystem</div>
  </main></div></div>
  <div class="modal-overlay" id="modal"><div class="modal" role="dialog" aria-modal="true"><div class="modal-head"><div><h2 id="modal-title">Aktion</h2><p id="modal-subtitle"></p></div><button class="close" id="close-modal" aria-label="Schließen">×</button></div><div id="modal-content"></div></div></div><div class="toast" id="toast" role="status"></div>
@@ -137,9 +150,10 @@ document.querySelectorAll('.ecb-logo-path').forEach(p=>p.setAttribute('d',ECB_LO
 const today = new Date(); document.getElementById('today-label').textContent=today.toLocaleDateString('de-DE',{weekday:'short',day:'2-digit',month:'long',year:'numeric'});
 const machines={wash:{title:'Milnor Waschmaschinen',short:'Waschmaschine',names:['Milnor Waschmaschine 1','Milnor Waschmaschine 2','Milnor Waschmaschine 3','Milnor Waschmaschine 4'],points:['Wassertank reinigen','Maschine reinigen, Zwischenräume','Waschmaschine schmieren','Maschine auf Mängelfreiheit überprüfen','Keine Mängel festgestellt']},dry:{title:'Wäschetrockner',short:'Trockner',names:['Trockner 1','Trockner 2','Trockner 3','Trockner 4'],points:['Gründliche Reinigung der Flusssiebe & Abluftkanäle','Prüfung der Trommeldichtung & Türverriegelung','Trockner aussaugen','Abluftrohre reinigen ggf. Flexrohr erneuern','Sicht- und Funktionsprüfung auf Mängel']},comp:{title:'Kompressor 2-Wochen',short:'Kompressor',names:['Kompressor (2-Wochen)'],points:['Ölstand am Schauglas prüfen und bei Bedarf Öl auffüllen','Ansaugfilter reinigen ggf. erneuern','Kältetrockner reinigen','Kompressor & Umgebung reinigen']},annual:{title:'Kompressor umfangreiche Wartung',short:'Kompressor',names:['Kompressor (Umfangreiche Wartung)'],points:['Kompletten Ölwechsel durchführen','Ölfilter erneuern und auf Dichtigkeit achten','Luftfilter / Ansaugfilter komplett erneuern & reinigen','Kältetrockner gründlich reinigen','Ölabscheider / Feinabscheider prüfen','Riemenspannung prüfen','Sicherheitsventile prüfen','Druckschalter prüfen','Kondensatableiter prüfen','Elektrische Anschlüsse prüfen','Gesamtanlage auf Dichtigkeit und ungewöhnliche Geräusche prüfen','Probelauf unter Betriebsdruck durchführen']}};
 let history=[]; let cloudProtocolsReady=false; let cloudDguvReady=false; let cloudError=''; let saveInProgress=false;
+let lastSavedMail=null,mailSending=false;const mailRequests=new Set();
 let dguv=[];
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function goto(page){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+page));document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.page===page));const title=({dashboard:'Übersicht',calendar:'Wartungskalender',retro:'Nachtragen',dguv:'DGUV V3',history:'Protokolle',form:'Protokoll erstellen',preview:'Protokollvorschau'})[page]||page;document.getElementById('breadcrumb-current').textContent=title;window.scrollTo({top:0,behavior:'smooth'});if(page==='history')renderHistory();if(page==='calendar')renderCalendar();if(page==='dguv')renderDguv();}
+function goto(page){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+page));document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.page===page));const title=({dashboard:'Übersicht',calendar:'Wartungskalender',retro:'Nachtragen',dguv:'DGUV V3',history:'Protokolle',form:'Protokoll erstellen',preview:'Protokollvorschau'})[page]||page;document.getElementById('breadcrumb-current').textContent=title;window.scrollTo({top:0,behavior:'smooth'});if(page==='history'){renderHistory();showSavedMailBanner();}if(page==='calendar')renderCalendar();if(page==='dguv')renderDguv();}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>goto(b.dataset.page)));
 let currentType='wash',retroActive=false,signed=false,previewP=null;
 function start(type,retro=false){currentType=type;retroActive=retro;let obj=machines[type];const pic=document.getElementById('form-machine-photo');const banner=document.getElementById('form-machine-banner');if(pic && banner){pic.src=ECB_ASSETS[type]||ECB_ASSETS.comp;banner.style.display='flex';document.getElementById('form-machine-photo-title').textContent=obj.title;}document.getElementById('form-title').textContent=obj.title;document.getElementById('form-machine').innerHTML=obj.names.map(n=>`<option>${esc(n)}</option>`).join('');if(retro&&['wash','dry'].includes(type)){let n=document.getElementById('retro-machine').value;document.getElementById('form-machine').selectedIndex=Math.max(0,Math.min(3,Number(n)-1));}document.getElementById('form-name').value=retro?document.getElementById('retro-name').value:'';document.getElementById('form-notes').value='';document.getElementById('form-runtime').value='';document.getElementById('cloud-photo').value='';document.getElementById('photo-names').textContent='';document.getElementById('checklist').innerHTML=obj.points.map((p,i)=>`<div class="check"><label>${i+1}. ${esc(p)}</label><select aria-label="Ergebnis Prüfpunkt ${i+1}"><option value="OK">✓ OK</option><option value="Mangel">⚠ Mangel</option></select></div>`).join('');const canvas=document.getElementById('signature');canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);signed=false;goto('form');}
@@ -147,7 +161,7 @@ document.querySelectorAll('[data-start]').forEach(b=>b.addEventListener('click',
 document.getElementById('retro-next').onclick=()=>{if(!document.getElementById('retro-name').value.trim()){toast('Bitte Techniker angeben.');return;}start(document.getElementById('retro-type').value,true)};document.getElementById('retro-type').onchange=e=>document.getElementById('retro-machine').disabled=!['wash','dry'].includes(e.target.value);
 
 function normalizeProtocol(id,data){
-  const p={...data,id:data.id||id};
+  const p={...data,id:data.id||id,__docId:id,__path:'artifacts/ecb-maintenance-live/public/data/protocols/'+id};
   p.category=String(p.category||p.type||'');
   p.type=p.category || String(p.machine||'');
   p.employee=String(p.employee||p.technician||p.name||'');
@@ -224,7 +238,7 @@ function renderDguv(){
 function renderHistory(){
  const q=document.getElementById('history-search').value.toLowerCase(),type=document.getElementById('history-filter').value;
  let rows=history.filter(p=>typeMatches(p,type)&&(`${p.id} ${p.machine} ${p.category} ${p.employee}`).toLowerCase().includes(q));
- document.getElementById('history-body').innerHTML=!cloudProtocolsReady?'<tr><td colspan="6">Firebase-Verbindung wird hergestellt …</td></tr>':rows.map(p=>`<tr><td><b>${esc(p.id)}</b></td><td>${esc(p.machine)}</td><td>${esc(p.date)}</td><td>${esc(p.employee)}</td><td><span class="status ${p.result==='Mangel'?'danger':''}">${esc(p.result)}</span></td><td><div class="actions"><button class="icon-btn" data-report="${esc(p.id)}">Ansehen / PDF</button></div></td></tr>`).join('')||'<tr><td colspan="6">Keine passenden Protokolle in Firebase gefunden.</td></tr>';
+ document.getElementById('history-body').innerHTML=!cloudProtocolsReady?'<tr><td colspan="6">Firebase-Verbindung wird hergestellt …</td></tr>':rows.map(p=>`<tr><td><b>${esc(p.id)}</b></td><td>${esc(p.machine)}</td><td>${esc(p.date)}</td><td>${esc(p.employee)}</td><td><span class="status ${p.result==='Mangel'?'danger':''}">${esc(p.result)}</span></td><td><div class="actions"><button class="icon-btn" data-report="${esc(p.id)}">Ansehen / PDF</button><button type="button" class="icon-btn" data-mail-report="${esc(p.id)}">✉ Senden</button></div></td></tr>`).join('')||'<tr><td colspan="6">Keine passenden Protokolle in Firebase gefunden.</td></tr>';
  document.getElementById('side-history-count').textContent=cloudProtocolsReady?history.length:'–';
  document.getElementById('metric-proto').textContent=cloudProtocolsReady?history.length:'–';
  renderDashboard();
@@ -279,7 +293,13 @@ document.getElementById('print-report').onclick=downloadPdf;
 document.getElementById('history-search').addEventListener('input',renderHistory);
 document.getElementById('history-filter').addEventListener('change',renderHistory);
 document.getElementById('reset-filter').onclick=()=>{document.getElementById('history-search').value='';document.getElementById('history-filter').value='all';renderHistory();};
-document.getElementById('history-body').addEventListener('click',e=>{const button=e.target.closest('[data-report]');if(!button)return;const record=history.find(p=>p.id===button.dataset.report);if(record)showReport(record);});
+document.getElementById('history-body').addEventListener('click',e=>{
+ const send=e.target.closest('[data-mail-report]');
+ if(send){const p=history.find(x=>x.id===send.dataset.mailReport);if(p)openSavedMail(p);return;}
+ const button=e.target.closest('[data-report]');
+ if(button){const p=history.find(x=>x.id===button.dataset.report);if(p)showReport(p);}
+});
+document.getElementById('ecb-mail-preview').addEventListener('click',()=>previewP&&openSavedMail(previewP));
 
 // Mobile Safari signature pad: explicit non-passive touch handlers stop page scrolling.
 const canvas=document.getElementById('signature');
@@ -333,13 +353,128 @@ async function saveProtocol(){
    const d=new Date(when+'T'+(time||'12:00'));if(isNaN(d.getTime()))throw new Error('Ungültiges Datum');
    const p={category:machines[currentType].title,type:machines[currentType].short,machine:document.getElementById('form-machine').value,employee:name,runtime:document.getElementById('form-runtime').value.trim(),date:d.toLocaleDateString('de-DE'),timestamp:d.toISOString(),points:pts,remarks:document.getElementById('form-notes').value,photos,signature:document.getElementById('signature').toDataURL('image/png')};
    if(JSON.stringify(p).length>900000)throw new Error('Fotos zu groß für Firestore (1-MB-Dokumentgrenze). Bitte weniger Bilder auswählen oder kleinere Fotos verwenden. Nichts wurde gespeichert.');
-   await window.ECB_SAVE(p);
-   toast('Wartungsprotokoll in Firebase gespeichert.');
+   const savedId=await window.ECB_SAVE(p);
+   lastSavedMail={...p,id:savedId,__docId:savedId,__path:'artifacts/ecb-maintenance-live/public/data/protocols/'+savedId};
+   toast('Wartungsprotokoll sicher gespeichert. E-Mail-Versand ist freiwillig.');
    goto('history');
  }catch(e){console.error(e);alert('Speichern fehlgeschlagen. Es wurde kein erfolgreiches Speichern bestätigt.\n'+(e.message||e));}
  finally{saveInProgress=false;button.disabled=false;button.textContent='✓ Protokoll in Firebase speichern';}
 }
 document.getElementById('save-protocol').onclick=saveProtocol;
+
+
+function showSavedMailBanner(){
+ const el=document.getElementById('ecb-saved-alert');
+ if(!lastSavedMail){el.style.display='none';return;}
+ document.getElementById('ecb-saved-label').textContent='Protokoll '+lastSavedMail.id+' · '+(lastSavedMail.machine||lastSavedMail.category||'Wartung')+' wurde bereits gespeichert. Jetzt versenden oder später im Archiv.';
+ el.style.display='flex';
+}
+document.getElementById('ecb-mail-last').onclick=()=>lastSavedMail&&openSavedMail(lastSavedMail);
+document.getElementById('ecb-mail-later').onclick=()=>{lastSavedMail=null;showSavedMailBanner();};
+window.ECB_RESET_SAVED_MAIL=()=>{lastSavedMail=null;mailRequests.clear();showSavedMailBanner();};
+let mailPdfPromise=null;
+async function loadMailPdf(){
+ if(typeof window.jspdf?.jsPDF==='function')return window.jspdf.jsPDF;
+ if(!mailPdfPromise)mailPdfPromise=(async()=>{
+  for(const url of [
+   'https://cdn.jsdelivr.net/npm/jspdf@2.5.2/dist/jspdf.umd.min.js',
+   'https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.2/jspdf.umd.min.js',
+   'https://unpkg.com/jspdf@2.5.2/dist/jspdf.umd.min.js'
+  ]){
+   try{
+    await new Promise((resolve,reject)=>{
+     const tag=document.createElement('script');let finished=false;
+     const settle=ok=>{if(finished)return;finished=true;clearTimeout(timeout);tag.onload=null;tag.onerror=null;if(ok)resolve();else{tag.remove();reject(Error('PDF-Bibliothek nicht erreichbar'));}};
+     const timeout=setTimeout(()=>settle(false),11000);
+     tag.src=url;tag.async=true;tag.onload=()=>settle(typeof window.jspdf?.jsPDF==='function');tag.onerror=()=>settle(false);
+     document.head.appendChild(tag);
+    });
+    if(typeof window.jspdf?.jsPDF==='function')return window.jspdf.jsPDF;
+   }catch(e){}
+  }
+  throw Error('PDF-Bibliothek konnte nicht geladen werden. Bitte Internetverbindung prüfen.');
+ })().catch(e=>{mailPdfPromise=null;throw e;});
+ return mailPdfPromise;
+}
+async function pdfForManualMail(p){
+ if(!p?.id||!p.signature||!Array.isArray(p.points)||!Array.isArray(p.photos))throw Error('Originalprotokoll ist unvollständig.');
+ const JsPDF=await loadMailPdf(),pdf=new JsPDF({format:'a4',unit:'mm'});
+ const margin=16,usable=178;let y=43;
+ const ensure=h=>{if(y+h>273){pdf.addPage();y=19;}};
+ const write=(str,size=10,strong=false)=>{
+  pdf.setFont('helvetica',strong?'bold':'normal');pdf.setFontSize(size);pdf.setTextColor(39,61,45);
+  for(const line of pdf.splitTextToSize(String(str??'–').replace(/[\r\n]+/g,' '),usable)){ensure(5.2);pdf.text(line,margin,y);y+=5.2;}
+  y+=1.5;
+ };
+ const logo=await imageToPdfData(ECB_ASSETS.logo,'PNG');
+ if(logo)pdf.addImage(logo.data,'PNG',margin,10,43,Math.min(23,43*logo.height/logo.width));
+ pdf.setFont('helvetica','bold');pdf.setFontSize(14);pdf.text('E.C.B. Reinigungssysteme GmbH',66,20);
+ pdf.setFont('helvetica','normal');pdf.setFontSize(9);pdf.text('Digitales Wartungsprotokoll',66,27);
+ pdf.setDrawColor(88,151,82);pdf.line(margin,34,194,34);
+ write('Protokoll-Nr.: '+p.id,11,true);
+ write('Maschine / Anlage: '+(p.machine||p.category||'Wartung'));
+ write('Datum: '+(p.date||'–'));
+ write('Techniker: '+(p.employee||p.technician||'–'));
+ if(p.runtime)write('Betriebsstunden: '+p.runtime);
+ y+=3;write('PRÜFPUNKTE',11,true);
+ for(const [i,item] of p.points.entries())write((i+1)+'. '+(item?.title||item?.name||'Prüfung')+' – '+(item?.status||item?.result||'Dokumentiert'),9);
+ y+=3;write('BEMERKUNGEN',10,true);write(p.remarks||'Keine Bemerkungen',9);
+ y+=4;write('ORIGINALFOTOS: '+p.photos.length,10,true);
+ for(const [i,photo] of p.photos.entries()){
+  const url=photoUrl(photo);if(!url)throw Error('Originalfoto '+(i+1)+' fehlt.');
+  const pic=await imageToPdfData(url,'JPEG');if(!pic)throw Error('Foto '+(i+1)+' nicht lesbar.');
+  const scale=Math.min(usable/pic.width,88/pic.height),w=pic.width*scale,h=pic.height*scale;
+  ensure(h+14);write('Foto '+(i+1),9,true);ensure(h+5);pdf.addImage(pic.data,'JPEG',margin,y,w,h);y+=h+8;
+ }
+ const signature=photoUrl(p.signature);if(!signature)throw Error('Gespeicherte Unterschrift fehlt.');
+ const sig=await imageToPdfData(signature,'PNG');
+ if(!sig)throw Error('Gespeicherte Unterschrift ist nicht lesbar.');
+ y+=4;write('ORIGINAL-UNTERSCHRIFT',10,true);
+ const scale=Math.min(102/sig.width,36/sig.height),w=sig.width*scale,h=sig.height*scale;
+ ensure(h+8);pdf.addImage(sig.data,'PNG',margin,y,w,h);
+ for(let i=1,n=pdf.getNumberOfPages();i<=n;i++){pdf.setPage(i);pdf.setFontSize(8);pdf.setTextColor(120);pdf.text('ECB Wartung | '+p.id+' | '+i+' / '+n,margin,289);}
+ const b64=pdf.output('datauristring').split(',')[1];
+ if(!b64||b64.length>8*1024*1024)throw Error('PDF zu groß für den kostenlosen Versand.');
+ return b64;
+}
+function openSavedMail(p){
+ if(!p||!p.id)return;
+ if(mailSending)return toast('Ein Versand wird bereits vorbereitet.');
+ if(!p.signature||!Array.isArray(p.points)||!Array.isArray(p.photos))return toast('Prüfpunkte, Fotos oder Unterschrift fehlen.');
+ const raw=p.__docId||p.id,sourcePath=p.__path||'artifacts/ecb-maintenance-live/public/data/protocols/'+raw;
+ const content='<div style="background:#305b39;color:white;padding:15px;border-radius:12px"><small>E.C.B. REINIGUNGSSYSTEME GMBH</small><h3 style="margin:7px 0 4px">Wartungsprotokoll per E-Mail versenden</h3><small>Gespeichertes Originaldokument mit PDF-Anhang</small></div>'
+  +'<div class="ecb-send-summary"><div><small>Protokoll</small><strong>'+esc(p.id)+'</strong></div><div><small>Maschine / Anlage</small><strong>'+esc(p.machine||p.category||'Wartung')+'</strong></div><div><small>Datum</small><strong>'+esc(p.date||'–')+'</strong></div><div><small>Dokumentation</small><strong>'+p.points.length+' Prüfpunkte, '+p.photos.length+' Fotos, Unterschrift</strong></div></div>'
+  +'<label class="ecb-send-label" for="ecb-mail-to">Empfänger</label><input class="ecb-send-input" id="ecb-mail-to" type="email" value="pb@ecb-system.de" required autocomplete="email">'
+  +'<div class="ecb-send-hint">Das Protokoll ist bereits in der Cloud gespeichert und bleibt gespeichert – auch wenn du auf „Später“ klickst. Die E-Mail wird erst nach deiner Bestätigung verschickt.</div>'
+  +'<div class="actions"><button class="button subtle" type="button" id="ecb-mail-cancel">Später</button><button class="button primary" type="button" id="ecb-mail-confirm">✉ Jetzt versenden</button></div>'
+  +'<div id="ecb-mail-status" class="ecb-send-result" role="status"></div>';
+ openModal('Wartungsprotokoll versenden','Original-PDF als Anhang',content);
+ const input=document.getElementById('ecb-mail-to'),button=document.getElementById('ecb-mail-confirm'),later=document.getElementById('ecb-mail-cancel'),status=document.getElementById('ecb-mail-status');
+ later.onclick=closeModal;
+ button.onclick=async()=>{
+  const to=input.value.trim().toLowerCase();
+  if(!input.checkValidity()||!to){status.style.color='#9d2b2b';status.textContent='Bitte gültige E-Mail-Adresse eingeben.';input.focus();return;}
+  const key=sourcePath+'|'+to;
+  if(mailRequests.has(key)){status.style.color='#9d2b2b';status.textContent='Dieser Versand wurde bereits angefordert. Kein Doppelversand.';return;}
+  if(!window.ECB_SEND_SAVED_MAIL){status.style.color='#9d2b2b';status.textContent='Bitte zuerst anmelden.';return;}
+  mailSending=true;button.disabled=true;later.disabled=true;input.disabled=true;
+  let requested=false;
+  try{
+   status.style.color='';status.textContent='Das PDF mit Fotos und Unterschrift wird erstellt …';
+   const pdfBase64=await pdfForManualMail(p);
+   status.textContent='PDF erstellt. E-Mail wird angefordert …';
+   const result=await window.ECB_SEND_SAVED_MAIL({mode:'manual',protocolId:p.id,sourcePath,recipient:to,requestId:crypto.randomUUID(),pdfBase64},()=>{requested=true;mailRequests.add(key);});
+   status.style.color='#276d36';status.textContent='✓ E-Mail erfolgreich angefordert an '+to+'. Versand-ID: '+(result.jobId||'bestätigt')+'. Das Protokoll bleibt gespeichert.';
+   button.textContent='✓ Versand bestätigt';
+  }catch(err){
+   status.style.color='#9d2b2b';
+   status.textContent=requested
+    ?'Versand nicht bestätigt: '+(err.message||err)+'. Bitte vor einem erneuten Versuch die Versandhistorie prüfen. Das Protokoll bleibt gespeichert.'
+    :'Es wurde keine E-Mail angefordert: '+(err.message||err)+'. Das Protokoll bleibt gespeichert.';
+   if(!requested)button.disabled=false;
+  }finally{mailSending=false;later.disabled=false;input.disabled=false;}
+ };
+}
 
 function openModal(title,subtitle,html){document.getElementById('modal-title').textContent=title;document.getElementById('modal-subtitle').textContent=subtitle;document.getElementById('modal-content').innerHTML=html;document.getElementById('modal').classList.add('open')}function closeModal(){document.getElementById('modal').classList.remove('open')}document.getElementById('close-modal').onclick=closeModal;document.getElementById('modal').onclick=e=>{if(e.target.id==='modal')closeModal()};document.getElementById('modal-content').onclick=e=>{const b=e.target.closest('[data-modal-start]');if(b){closeModal();start(b.dataset.modalStart)}};
 
@@ -373,7 +508,7 @@ try {
  const protocols=collection(db,'artifacts','ecb-maintenance-live','public','data','protocols');
  const devices=collection(db,'artifacts','ecb-maintenance-live','public','data','dguv_devices');
  let unsubProtocols=null,unsubDevices=null;
- const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubProtocols=null;unsubDevices=null;window.ECB_SAVE=null;};
+ const teardown=()=>{unsubProtocols?.();unsubDevices?.();unsubProtocols=null;unsubDevices=null;window.ECB_SAVE=null;window.ECB_SEND_SAVED_MAIL=null;window.ECB_RESET_SAVED_MAIL?.();};
  window.ECB_LOGIN=async(email,password)=>signInWithEmailAndPassword(auth,email,password);
  window.ECB_LOGOUT=async()=>signOut(auth);
  onAuthStateChanged(auth,user=>{
@@ -398,6 +533,18 @@ try {
      await setDoc(reference,record);
      if(!(await getDocFromServer(reference)).exists())throw Error('Firestore hat die Speicherung nicht bestätigt.');
      return reference.id;
+   };
+   window.ECB_SEND_SAVED_MAIL=async(payload,onStart)=>{
+     const loggedIn=auth.currentUser;
+     if(!loggedIn)throw Error('Firebase-Anmeldung fehlt.');
+     const token=await loggedIn.getIdToken(true);
+     if(typeof onStart==='function')onStart();
+     const response=await fetch('https://ecb-wartung-free-mail.ecbmaintenance-mail.workers.dev/send-protocol',{
+       method:'POST',headers:{Authorization:'Bearer '+token,'Content-Type':'application/json'},body:JSON.stringify(payload)
+     });
+     const result=await response.json().catch(()=>({}));
+     if(!response.ok||!result.ok)throw Error(result.error||'Versand nicht bestätigt (HTTP '+response.status+').');
+     return result;
    };
    unsubProtocols=onSnapshot(protocols,{includeMetadataChanges:true},snap=>window.ECB_ACCEPT_SNAPSHOT(snap.docs.map(d=>({id:d.id,data:d.data()})),snap.metadata.fromCache),err=>window.ECB_CLOUD_ERROR('Protokolle',err));
    unsubDevices=onSnapshot(devices,{includeMetadataChanges:true},snap=>window.ECB_ACCEPT_DGUV(snap.docs.map(d=>({id:d.id,data:d.data()})),snap.metadata.fromCache),err=>window.ECB_CLOUD_ERROR('DGUV',err));
