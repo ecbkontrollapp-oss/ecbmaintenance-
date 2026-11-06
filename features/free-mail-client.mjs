@@ -4,6 +4,7 @@ import {getApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js
 import {getAuth} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 
 const PHOTO_MAX=6*1024*1024,DESTINATION='pb@ecb-system.de';
+window.ECB_FREE_MAIL_ENDPOINT=window.ECB_FREE_MAIL_ENDPOINT||'https://ecb-wartung-free-mail.ecbmaintenance-mail.workers.dev/send-protocol';
 const urlOf=x=>typeof x==='string'?x:x?.dataUrl||x?.data||x?.url||x?.src||'';
 const clean=v=>String(v??'').replace(/[\r\n]+/g,' ');
 async function buildPdf(p){
@@ -21,7 +22,9 @@ async function buildPdf(p){
    y+=3;
  };
  // imageToPdfData is the app's original image-loading helper. It rejects broken photos.
- const logo=await window.imageToPdfData(window.ECB_ASSETS?.logo||ECB_ASSETS.logo,'PNG');
+ const originalLogo=document.querySelector('img[data-ecb-logo]')?.src;
+ if(!originalLogo)throw Error('ECB-Original-Logo fehlt. PDF wird nicht versendet.');
+ const logo=await window.imageToPdfData(originalLogo,'PNG');
  next(28);pdf.addImage(logo.data,'PNG',margin,y,48,Math.min(24,48*logo.height/logo.width));
  pdf.setFont('helvetica','bold');pdf.setFontSize(14);
  pdf.text('E.C.B. Reinigungssysteme GmbH',65,y+9);
@@ -41,7 +44,8 @@ async function buildPdf(p){
  for(const [i,item] of photos.entries()){
    const u=urlOf(item);if(!u)throw Error('Originalfoto '+(i+1)+' fehlt. Kein Versand erfolgt.');
    const img=await window.imageToPdfData(u,'JPEG');
-   const width=Math.min(usable,100*img.width/img.height),height=Math.min(100,usable*img.height/img.width);
+   const scale=Math.min(1,usable/img.width*0.2645833,100/img.height*0.2645833);
+   const width=Math.max(1,img.width*scale*0.2645833),height=Math.max(1,img.height*scale*0.2645833);
    next(height+18);pdf.addImage(img.data,'JPEG',margin,y,width,height);
    y+=height+5;line('Foto '+(i+1),8);
  }
