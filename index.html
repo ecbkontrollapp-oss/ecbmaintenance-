@@ -63,6 +63,21 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
 .ecb-send-result{margin-top:10px;font-size:13px;line-height:1.5;white-space:pre-wrap}
 @media(max-width:680px){.ecb-saved-alert .actions{width:100%}.ecb-saved-alert .actions button{flex:1}}
 </style>
+
+<style id="ecb-account-admin-styles">
+.ecb-admin-card{padding:22px;margin:17px 0;background:#fff;border:1px solid #e0eadb;border-radius:17px;box-shadow:0 7px 26px #2541210c}
+.ecb-admin-card h2{font-size:19px;margin:0 0 10px}.ecb-admin-card p{color:#617668;line-height:1.6}
+.ecb-admin-metrics{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0}
+.ecb-admin-metric{background:#f0f7ea;padding:14px;border:1px solid #deecd8;border-radius:12px}
+.ecb-admin-metric small{display:block;color:#657a67;font-size:11px}.ecb-admin-metric b{font-size:25px;color:#315f35}
+.ecb-admin-actions{display:flex;flex-wrap:wrap;gap:10px;margin:15px 0}
+.ecb-admin-actions a{display:inline-flex;justify-content:center;align-items:center;text-decoration:none}
+.ecb-admin-warning{border-left:4px solid #e1ad55;background:#fff9eb;color:#715728;padding:13px;border-radius:8px;font-size:12px;line-height:1.6}
+.ecb-admin-row{display:flex;justify-content:space-between;align-items:center;gap:14px;padding:12px;border:1px solid #e4ebe0;border-radius:10px;background:#fafcf9;margin:9px 0}
+.ecb-admin-row>div{min-width:0;overflow-wrap:anywhere}.ecb-admin-row small{display:block;color:#6e7e72}
+.ecb-account-form{max-width:520px}.ecb-account-form .field{margin:12px 0}.ecb-account-form input{width:100%;min-height:49px}
+@media(max-width:730px){.ecb-admin-card{padding:16px}.ecb-admin-metrics{grid-template-columns:1fr 1fr}.ecb-admin-actions>*{flex:1}.sidebar .nav-btn[data-page="admin"]{font-size:9px}}
+</style>
 </head>
 <body>
 <div class="layout">
@@ -74,6 +89,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
    <button class="nav-btn" data-page="retro"><span class="ico">↶</span> Nachtragen</button>
    <button class="nav-btn" data-page="dguv"><span class="ico">♧</span> DGUV V3 <span class="num" id="side-dguv-count">–</span></button>
    <button class="nav-btn" data-page="history"><span class="ico">▣</span> Protokolle <span class="num" id="side-history-count">–</span></button>
+   <button type="button" class="nav-btn" data-page="admin" id="ecb-admin-nav" hidden style="display:none"><span class="ico">⚙</span> Admin</button>
   </nav></div>
   <div class="side-bottom"><div class="cloud-state"><span class="pulse"></span><div><b id="sync-label">Firebase: wird verbunden</b><span id="sync-detail">Geschützte Anmeldung erforderlich</span></div></div><div class="profile"><div class="avatar">EC</div><div><b>ECB Wartung</b><small>Wartung & Prüfung</small></div></div></div>
  </aside>
@@ -83,7 +99,7 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
  <p style="color:#6a7d71;margin-bottom:18px">Aus Datenschutzgründen werden Protokolle, Dokumentationsfotos und Unterschriften erst nach einer bestätigten Firebase-Anmeldung geladen.</p>
  <form id="auth-form" autocomplete="on"><div class="field-grid"><div class="field"><label for="firebase-email">E-Mail</label><input type="email" id="firebase-email" autocomplete="username" required placeholder="E-Mail-Adresse"></div><div class="field"><label for="firebase-password">Passwort</label><input type="password" id="firebase-password" autocomplete="current-password" required placeholder="Firebase-Passwort"></div></div>
  <button class="button primary" style="margin-top:16px" id="auth-submit" type="submit">Anmelden</button><span class="muted" id="auth-feedback" style="display:block;margin-top:12px" role="status">Alte lokal gespeicherte App-Passwörter sind keine Firebase-Anmeldedaten.</span></form></section>
- <div id="auth-identity" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:13px"><button class="button subtle" id="auth-logout" type="button">Abmelden</button></div>
+ <div id="auth-identity" style="display:none;justify-content:flex-end;align-items:center;gap:10px;margin-bottom:13px;flex-wrap:wrap"><button type="button" class="button subtle" id="ecb-my-account">Mein Konto · Passwort ändern</button><button class="button subtle" id="auth-logout" type="button">Abmelden</button></div>
  <div class="notice" id="cloud-message" role="status"><span>ⓘ</span><span id="cloud-message-text">Anmeldung erforderlich: Die Originaldaten werden nach erfolgreicher Authentifizierung synchronisiert.</span></div>
  <section id="view-dashboard" class="view active"><div class="hero"><div><div class="eyebrow">Wartung & Qualitätssicherung</div><h1>Wartungsübersicht</h1><p>Alle Anlagen, anstehenden Prüfungen und Wartungsprotokolle übersichtlich an einem Ort.</p></div><button class="button primary" data-action="new">＋ Neue Wartung</button></div>
  <div class="metric-grid"><div class="metric"><div class="metric-top">Anlagen im System <span class="metric-icon">⚙</span></div><strong>10</strong><small>8 Maschinen · 2 Kompressorprüfungen</small></div><div class="metric"><div class="metric-top">Wartungen fällig <span class="metric-icon" style="background:#fff3de;color:#bd8529">◷</span></div><strong id="metric-due">–</strong><small id="metric-due-note">Fälligkeit aus Wartungsverlauf</small></div><div class="metric"><div class="metric-top">DGUV Prüfgeräte <span class="metric-icon" style="background:#e7f2f7;color:#387e98">♧</span></div><strong id="metric-dguv">–</strong><small>Bestand aus Firebase</small></div><div class="metric"><div class="metric-top">Gespeicherte Protokolle <span class="metric-icon">▣</span></div><strong id="metric-proto">–</strong><small class="good">Aus der originalen Cloud-Historie</small></div></div>
@@ -141,7 +157,44 @@ body{background:radial-gradient(circle at 95% 1%,#e0f2de 0,transparent 31%),line
  <section id="view-retro" class="view"><div class="hero"><div><div class="eyebrow">Nachträgliche Dokumentation</div><h1>Wartung nachtragen</h1><p>Historische Arbeiten mit originalem Datum, Uhrzeit und zuständigem Techniker erfassen.</p></div></div><div class="panel form-panel"><div class="field-grid"><div class="field"><label for="retro-type">Anlage / Wartungsart</label><select id="retro-type"><option value="wash">Milnor Waschmaschine</option><option value="dry">Trockner</option><option value="comp">Kompressor 2-Wochen</option><option value="annual">Kompressor umfangreiche Wartung</option></select></div><div class="field"><label for="retro-machine">Maschine</label><select id="retro-machine"><option>1</option><option>2</option><option>3</option><option>4</option></select></div><div class="field"><label for="retro-date">Durchführungsdatum</label><input type="date" id="retro-date" value="2026-11-04"></div><div class="field"><label for="retro-time">Uhrzeit</label><input type="time" id="retro-time" value="08:00"></div><div class="field" style="grid-column:1/-1"><label for="retro-name">Techniker</label><input id="retro-name" placeholder="Name eingeben"></div></div><div style="margin-top:20px"><button class="button primary" id="retro-next">Prüfpunkte öffnen →</button></div></div></section>
  <section id="view-dguv" class="view"><div class="hero"><div><div class="eyebrow">Prüfmanagement</div><h1>DGUV V3 Prüfungen</h1><p>Gerätebestand, Prüffälligkeiten und zugehörige Messprotokolle – übersichtlich dokumentiert.</p></div><button class="button subtle" data-action="dguv">Gerätebestand ansehen</button></div><div class="metric-grid" style="margin-bottom:20px"><div class="metric"><div class="metric-top">Erfasste Geräte</div><strong id="dguv-total">–</strong></div><div class="metric"><div class="metric-top">Geprüft</div><strong id="dguv-completed">–</strong></div><div class="metric"><div class="metric-top">Bald fällig</div><strong id="dguv-due">–</strong></div><div class="metric"><div class="metric-top">Dokumente</div><strong id="dguv-attachments">–</strong></div></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Gerät</th><th>Inventarnr.</th><th>Standort</th><th>Fällig</th><th>Status</th><th>Aktion</th></tr></thead><tbody id="dguv-body"></tbody></table></div></section>
  <section id="view-history" class="view"><div class="hero"><div><div class="eyebrow">Archiv und Dokumentation</div><h1>Gespeicherte Protokolle</h1><p>Alle Wartungsnachweise inklusive Checklisten, Fotos und Unterschriften im Blick.</p></div><button class="button subtle" id="cloud-backup" title="Freigabe nach Prüfung der Firebase-Zugriffsregeln" disabled>Cloud-Sicherung nach Sicherheitsprüfung</button></div><div id="ecb-saved-alert" class="ecb-saved-alert" style="display:none"><div><strong>✓ In der Cloud gespeichert</strong><p id="ecb-saved-label">Das Wartungsprotokoll ist sicher gespeichert. Der E-Mail-Versand ist optional.</p></div><div class="actions"><button type="button" class="button primary" id="ecb-mail-last">✉ Per E-Mail versenden</button><button type="button" class="button subtle" id="ecb-mail-later">Später</button></div></div><div class="toolbar"><input class="search" id="history-search" placeholder="⌕  Protokoll, Anlage oder Techniker suchen ..."><select class="select" id="history-filter"><option value="all">Alle Kategorien</option><option value="Waschmaschine">Waschmaschinen</option><option value="Trockner">Trockner</option><option value="Kompressor">Kompressoren</option></select><button class="button subtle" id="reset-filter">Zurücksetzen</button></div><div class="table-wrap"><table class="data-table"><thead><tr><th>Protokoll</th><th>Maschine</th><th>Datum</th><th>Techniker</th><th>Ergebnis</th><th>Aktion</th></tr></thead><tbody id="history-body"></tbody></table></div><p class="muted" style="margin-top:15px">Die bisherigen echten Protokolle werden hier im Entwurf bewusst nicht angezeigt oder bearbeitet.</p></section>
- <section id="view-form" class="view"><div class="hero"><div><div class="eyebrow">Digitale Wartung</div><h1 id="form-title">Wartungsprotokoll</h1><p>Prüfpunkte, Fotos und Unterschrift werden zusammen als Protokoll gespeichert. Speichern ist erst bei bestätigter Cloud-Verbindung möglich.</p></div><button class="button subtle" data-page="dashboard">← Übersicht</button></div><div class="form-machine-banner" id="form-machine-banner"><img id="form-machine-photo" alt="Originalaufnahme der Maschine"><div><span>ECB SERVICE</span><strong id="form-machine-photo-title">Digitale Wartung</strong></div></div><div class="panel form-panel"><div class="field-grid"><div class="field"><label for="form-machine">Anlage</label><select id="form-machine"></select></div><div class="field"><label for="form-name">Techniker</label><input id="form-name" placeholder="Name des Technikers"></div><div class="field"><label for="form-runtime">Betriebsstunden (optional)</label><input id="form-runtime" type="text" inputmode="decimal" placeholder="Aktueller Betriebsstundenzähler"></div></div><h3 style="margin:23px 0 5px">Prüf- und Wartungspunkte</h3><p class="muted" style="margin:0 0 8px">Bitte je Prüfpunkt OK oder Mangel auswählen.</p><div id="checklist"></div><div class="field" style="margin-top:18px"><label for="form-notes">Bemerkungen</label><textarea id="form-notes" placeholder="Feststellungen und zusätzliche Hinweise"></textarea></div><div class="field" style="margin-top:15px"><label for="cloud-photo">Dokumentationsfotos (werden im Originalprotokoll gespeichert)</label><input id="cloud-photo" type="file" accept="image/*" multiple></div><div id="photo-names" class="muted" style="margin-top:6px"></div><div class="field" style="margin-top:15px"><label>Unterschrift</label><canvas id="signature" width="730" height="170" aria-label="Hier mit dem Finger unterschreiben" style="touch-action:none !important;-ms-touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;display:block;width:100%;height:170px;border:2px solid #b5d399;border-radius:13px;background:#fff;cursor:crosshair"></canvas><small style="color:#54813b;font-size:11px">Mit dem Finger im weißen Feld unterschreiben. Die Seite bleibt dabei stehen.</small><button class="link" id="clear-sign" style="align-self:flex-end">Unterschrift löschen</button></div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px"><button class="button primary" id="save-protocol">✓ Protokoll in Firebase speichern</button><button class="button subtle" data-page="dashboard">Abbrechen</button></div></div></section>
+ 
+<section id="view-admin" class="view">
+ <div class="hero"><div><div class="eyebrow">Geschützter Admin-Bereich</div><h1>Administration</h1><p>Benutzer und Wartungsdokumente verwalten</p></div></div>
+ <div class="ecb-admin-metrics">
+  <div class="ecb-admin-metric"><small>Cloud-Protokolle</small><b id="ecb-admin-protocols">–</b></div>
+  <div class="ecb-admin-metric"><small>Originalfotos</small><b id="ecb-admin-photos">–</b></div>
+  <div class="ecb-admin-metric"><small>Unterschriften</small><b id="ecb-admin-signatures">–</b></div>
+ </div>
+ <div class="ecb-admin-card">
+  <h2>Benutzerverwaltung</h2>
+  <p>Mitarbeiter anlegen, Benutzerkonten sperren und löschen. Dafür öffnest du die geschützte Firebase-Konsole.</p>
+  <div class="ecb-admin-actions"><a class="button primary" target="_blank" rel="noopener noreferrer" href="https://console.firebase.google.com/project/ecb-maintenance/authentication/users">Benutzer anlegen und verwalten ↗</a></div>
+  <div class="ecb-admin-warning">Die direkte Benutzerverwaltung innerhalb dieser App ist noch nicht freigeschaltet. Dafür fehlt eine geprüfte serverseitige Firebase-Admin-Anbindung. Bestehende Benutzer werden nicht verändert.</div>
+ </div>
+ <div class="ecb-admin-card">
+  <h2>Dokumente und Wartungsprotokolle</h2>
+  <p>Alle gespeicherten Protokolle mit Fotos und Unterschriften. Vor dem Löschen immer eine Sicherung erstellen.</p>
+  <div class="ecb-admin-actions"><button class="button primary" id="ecb-admin-export" type="button">Gesamtsicherung herunterladen</button><a class="button subtle" target="_blank" rel="noopener noreferrer" href="https://console.firebase.google.com/project/ecb-maintenance/firestore/databases/-default-/data">Firebase-Dokumente verwalten ↗</a></div>
+  <div class="ecb-admin-warning">Ein endgültiger Löschvorgang erfolgt vorerst nur in der geschützten Firebase-Konsole. Beim Löschen eines Protokolls können auch Bilder und Unterschriften gelöscht werden.</div>
+  <div class="field" style="margin-top:17px"><label for="ecb-admin-filter">Protokolle suchen</label><input type="search" class="search" id="ecb-admin-filter" placeholder="Protokollnummer, Maschine, Techniker"></div>
+  <p class="muted" id="ecb-admin-count-note"></p><div id="ecb-admin-list"></div>
+ </div>
+</section>
+<section id="view-account" class="view">
+ <div class="hero"><div><div class="eyebrow">Mitarbeiterkonto</div><h1>Mein Konto</h1><p>Eigenes Passwort sicher ändern</p></div><button type="button" class="button subtle" data-page="dashboard">← Übersicht</button></div>
+ <div class="ecb-admin-card">
+  <h2>Passwort ändern</h2>
+  <p>Gilt für jeden Mitarbeiter mit eigenem Login. Du benötigst dein bisheriges Passwort. Das neue Passwort wird direkt bei Firebase gespeichert.</p>
+  <form id="ecb-password-form" class="ecb-account-form" autocomplete="on">
+   <div class="field"><label for="ecb-password-old">Bisheriges Passwort</label><input id="ecb-password-old" type="password" autocomplete="current-password" required></div>
+   <div class="field"><label for="ecb-password-new">Neues Passwort</label><input id="ecb-password-new" type="password" autocomplete="new-password" minlength="10" maxlength="128" required placeholder="Mindestens 10 Zeichen"></div>
+   <div class="field"><label for="ecb-password-confirm">Neues Passwort wiederholen</label><input id="ecb-password-confirm" type="password" autocomplete="new-password" minlength="10" maxlength="128" required></div>
+   <button type="submit" id="ecb-password-save" class="button primary">Passwort ändern</button>
+   <p id="ecb-password-feedback" class="muted" role="status" aria-live="polite"></p>
+  </form>
+ </div>
+</section>
+<section id="view-form" class="view"><div class="hero"><div><div class="eyebrow">Digitale Wartung</div><h1 id="form-title">Wartungsprotokoll</h1><p>Prüfpunkte, Fotos und Unterschrift werden zusammen als Protokoll gespeichert. Speichern ist erst bei bestätigter Cloud-Verbindung möglich.</p></div><button class="button subtle" data-page="dashboard">← Übersicht</button></div><div class="form-machine-banner" id="form-machine-banner"><img id="form-machine-photo" alt="Originalaufnahme der Maschine"><div><span>ECB SERVICE</span><strong id="form-machine-photo-title">Digitale Wartung</strong></div></div><div class="panel form-panel"><div class="field-grid"><div class="field"><label for="form-machine">Anlage</label><select id="form-machine"></select></div><div class="field"><label for="form-name">Techniker</label><input id="form-name" placeholder="Name des Technikers"></div><div class="field"><label for="form-runtime">Betriebsstunden (optional)</label><input id="form-runtime" type="text" inputmode="decimal" placeholder="Aktueller Betriebsstundenzähler"></div></div><h3 style="margin:23px 0 5px">Prüf- und Wartungspunkte</h3><p class="muted" style="margin:0 0 8px">Bitte je Prüfpunkt OK oder Mangel auswählen.</p><div id="checklist"></div><div class="field" style="margin-top:18px"><label for="form-notes">Bemerkungen</label><textarea id="form-notes" placeholder="Feststellungen und zusätzliche Hinweise"></textarea></div><div class="field" style="margin-top:15px"><label for="cloud-photo">Dokumentationsfotos (werden im Originalprotokoll gespeichert)</label><input id="cloud-photo" type="file" accept="image/*" multiple></div><div id="photo-names" class="muted" style="margin-top:6px"></div><div class="field" style="margin-top:15px"><label>Unterschrift</label><canvas id="signature" width="730" height="170" aria-label="Hier mit dem Finger unterschreiben" style="touch-action:none !important;-ms-touch-action:none;overscroll-behavior:contain;-webkit-user-select:none;user-select:none;-webkit-touch-callout:none;display:block;width:100%;height:170px;border:2px solid #b5d399;border-radius:13px;background:#fff;cursor:crosshair"></canvas><small style="color:#54813b;font-size:11px">Mit dem Finger im weißen Feld unterschreiben. Die Seite bleibt dabei stehen.</small><button class="link" id="clear-sign" style="align-self:flex-end">Unterschrift löschen</button></div><div style="display:flex;gap:10px;flex-wrap:wrap;margin-top:20px"><button class="button primary" id="save-protocol">✓ Protokoll in Firebase speichern</button><button class="button subtle" data-page="dashboard">Abbrechen</button></div></div></section>
  <section id="view-preview" class="view"><div class="hero"><div><div class="eyebrow">Protokollvorschau</div><h1>Digitales Wartungsprotokoll</h1><p>ECB-Protokoll mit Prüfpunkten, Fotos und Unterschrift – direkt aus der Cloud.</p></div><button class="button subtle" data-page="history">← Archiv</button></div><div class="panel form-panel" id="report-content"></div><div style="margin-top:16px"><button class="button primary" id="print-report">PDF mit Bildern und Unterschrift herunterladen</button> <button class="button subtle" type="button" id="ecb-mail-preview">✉ Per E-Mail versenden</button></div></section>
  <div class="footer-note">© E.C.B. Reinigungssysteme GmbH · Digitales Wartungssystem</div>
  </main></div></div>
@@ -162,7 +215,7 @@ let history=[]; let cloudProtocolsReady=false; let cloudDguvReady=false; let clo
 let lastSavedMail=null,mailSending=false;const mailRequests=new Set();
 let dguv=[];
 function esc(x){return String(x??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
-function goto(page){document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+page));document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.page===page));const title=({dashboard:'Übersicht',calendar:'Wartungskalender',retro:'Nachtragen',dguv:'DGUV V3',history:'Protokolle',form:'Protokoll erstellen',preview:'Protokollvorschau'})[page]||page;document.getElementById('breadcrumb-current').textContent=title;window.scrollTo({top:0,behavior:'smooth'});if(page==='history'){renderHistory();showSavedMailBanner();}if(page==='calendar')renderCalendar();if(page==='dguv')renderDguv();}
+function goto(page){if(page==='admin'&&!window.ECB_ADMIN_ACCESS){toast('Nur für Administratoren.');return;}if(page==='account'&&!window.ECB_CHANGE_MY_PASSWORD){toast('Bitte zuerst anmelden.');return;}document.querySelectorAll('.view').forEach(x=>x.classList.toggle('active',x.id==='view-'+page));document.querySelectorAll('.nav-btn').forEach(x=>x.classList.toggle('active',x.dataset.page===page));const title=({dashboard:'Übersicht',calendar:'Wartungskalender',retro:'Nachtragen',dguv:'DGUV V3',history:'Protokolle',form:'Protokoll erstellen',preview:'Protokollvorschau',admin:'Administration',account:'Mein Konto'})[page]||page;document.getElementById('breadcrumb-current').textContent=title;window.scrollTo({top:0,behavior:'smooth'});if(page==='history'){renderHistory();showSavedMailBanner();}if(page==='calendar')renderCalendar();if(page==='dguv')renderDguv();if(page==='admin')renderAdminPanel();}
 document.querySelectorAll('[data-page]').forEach(b=>b.addEventListener('click',()=>goto(b.dataset.page)));
 let currentType='wash',retroActive=false,signed=false,previewP=null;
 function start(type,retro=false){currentType=type;retroActive=retro;let obj=machines[type];const pic=document.getElementById('form-machine-photo');const banner=document.getElementById('form-machine-banner');if(pic && banner){pic.src=ECB_ASSETS[type]||ECB_ASSETS.comp;banner.style.display='flex';document.getElementById('form-machine-photo-title').textContent=obj.title;}document.getElementById('form-title').textContent=obj.title;document.getElementById('form-machine').innerHTML=obj.names.map(n=>`<option>${esc(n)}</option>`).join('');if(retro&&['wash','dry'].includes(type)){let n=document.getElementById('retro-machine').value;document.getElementById('form-machine').selectedIndex=Math.max(0,Math.min(3,Number(n)-1));}document.getElementById('form-name').value=retro?document.getElementById('retro-name').value:'';document.getElementById('form-notes').value='';document.getElementById('form-runtime').value='';document.getElementById('cloud-photo').value='';document.getElementById('photo-names').textContent='';document.getElementById('checklist').innerHTML=obj.points.map((p,i)=>`<div class="check"><label>${i+1}. ${esc(p)}</label><select aria-label="Ergebnis Prüfpunkt ${i+1}"><option value="OK">✓ OK</option><option value="Mangel">⚠ Mangel</option></select></div>`).join('');const canvas=document.getElementById('signature');canvas.getContext('2d').clearRect(0,0,canvas.width,canvas.height);signed=false;goto('form');}
@@ -491,9 +544,69 @@ document.querySelectorAll('[data-action="dguv"]').forEach(b=>b.onclick=()=>openM
 document.getElementById('dguv-body').addEventListener('click',e=>{const b=e.target.closest('[data-dguv-index]');if(!b)return;const p=dguv[Number(b.dataset.dguvIndex)];if(!p)return;const raw=p.raw;const docs=[...(Array.isArray(raw.documents)?raw.documents:[]),...(Array.isArray(raw.attachments)?raw.attachments:[])];const linkHtml=docs.map((v,i)=>{const u=typeof v==='string'?v:v.url||v.dataUrl||'';return /^https:\/\//.test(u)?`<p><a href="${esc(u)}" target="_blank" rel="noopener">Dokument ${i+1} öffnen</a></p>`:u.startsWith('data:application/pdf;base64,')?`<p><a href="${esc(u)}" download="DGUV_Dokument_${i+1}.pdf">Dokument ${i+1} herunterladen</a></p>`:''}).join('');openModal(p.name,'Gespeicherter DGUV-Datensatz',`<div class="field-grid"><p><b>Inventar:</b> ${esc(p.inventory)}</p><p><b>Standort:</b> ${esc(p.location)}</p><p><b>Fällig:</b> ${esc(p.due)}</p><p><b>Status:</b> ${esc(p.status)}</p></div>${linkHtml||'<p>Keine PDF-Anlagen direkt im Dokument referenziert.</p>'}`)});
 document.getElementById('cloud-backup').onclick=()=>{if(!cloudProtocolsReady){toast('Cloud ist noch nicht geladen. Export nicht möglich.');return}const data=new Blob([JSON.stringify({exportedAt:new Date().toISOString(),source:'ecb-maintenance',protocols:history,dguv_devices:dguv.map(x=>({id:x.id,...x.raw}))},null,2)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(data);a.download='ECB_Firebase_Protokolle_Export_'+new Date().toISOString().slice(0,10)+'.json';a.click();setTimeout(()=>URL.revokeObjectURL(a.href),2000)};
 function cloudLoadError(where,e){cloudError=where+': '+(e?.message||String(e));cloudState('Firebase-Verbindung fehlgeschlagen',cloudError,true);toast('Cloud-Fehler: '+where);}
-window.ECB_ACCEPT_SNAPSHOT=(docs,fromCache)=>{history=docs.map(d=>normalizeProtocol(d.id,d.data)).sort((a,b)=>dateValue(b)-dateValue(a));cloudProtocolsReady=!fromCache;cloudState(cloudProtocolsReady?'Firebase verbunden':'Lokaler Firebase-Zwischenspeicher',cloudProtocolsReady?`${history.length} Protokolle geladen`:'Warte auf bestätigte Serverdaten',false);renderHistory();renderCalendar();};
+window.ECB_ACCEPT_SNAPSHOT=(docs,fromCache)=>{history=docs.map(d=>normalizeProtocol(d.id,d.data)).sort((a,b)=>dateValue(b)-dateValue(a));cloudProtocolsReady=!fromCache;cloudState(cloudProtocolsReady?'Firebase verbunden':'Lokaler Firebase-Zwischenspeicher',cloudProtocolsReady?`${history.length} Protokolle geladen`:'Warte auf bestätigte Serverdaten',false);renderHistory();renderCalendar();if(window.ECB_ADMIN_ACCESS)renderAdminPanel();};
 window.ECB_ACCEPT_DGUV=(docs,fromCache)=>{dguv=docs.map(d=>normalizeDguv(d.id,d.data));cloudDguvReady=!fromCache;cloudState(cloudProtocolsReady&&cloudDguvReady?'Firebase live synchronisiert':'Firebase wird geladen',`${history.length} Protokolle · ${dguv.length} DGUV-Geräte`,false);renderDguv();};
 window.ECB_CLOUD_ERROR=cloudLoadError;
+
+window.ECB_ADMIN_ACCESS=false;
+window.ECB_CHANGE_MY_PASSWORD=null;
+function setAdminAccess(granted){
+ window.ECB_ADMIN_ACCESS=Boolean(granted);
+ const el=document.getElementById('ecb-admin-nav');el.hidden=!window.ECB_ADMIN_ACCESS;el.style.display=window.ECB_ADMIN_ACCESS?'':'none';
+ if(!window.ECB_ADMIN_ACCESS&&document.getElementById('view-admin').classList.contains('active'))goto('dashboard');
+ if(window.ECB_ADMIN_ACCESS)renderAdminPanel();
+}
+function renderAdminPanel(){
+ if(!window.ECB_ADMIN_ACCESS)return;
+ document.getElementById('ecb-admin-protocols').textContent=cloudProtocolsReady?history.length:'–';
+ document.getElementById('ecb-admin-photos').textContent=cloudProtocolsReady?history.reduce((a,p)=>a+(Array.isArray(p.photos)?p.photos.length:0),0):'–';
+ document.getElementById('ecb-admin-signatures').textContent=cloudProtocolsReady?history.filter(p=>p.signature).length:'–';
+ const q=document.getElementById('ecb-admin-filter').value.trim().toLowerCase();
+ const found=history.filter(p=>(String(p.id)+' '+String(p.machine)+' '+String(p.employee)+' '+String(p.category)).toLowerCase().includes(q));
+ document.getElementById('ecb-admin-count-note').textContent=!cloudProtocolsReady?'Firebase-Daten werden geladen.':found.length+' von '+history.length+' Protokollen';
+ const list=document.getElementById('ecb-admin-list');list.textContent='';
+ if(!cloudProtocolsReady)return;
+ found.slice(0,100).forEach(p=>{
+  const row=document.createElement('div');row.className='ecb-admin-row';
+  const info=document.createElement('div');const name=document.createElement('strong');name.textContent=p.id;
+  const desc=document.createElement('small');desc.textContent=(p.machine||p.category||'Anlage')+' · '+p.date+' · '+(p.photos?.length||0)+' Fotos';
+  info.append(name,desc);
+  const btn=document.createElement('button');btn.type='button';btn.className='button subtle';btn.textContent='Prüfen';btn.addEventListener('click',()=>showReport(p));
+  row.append(info,btn);list.append(row);
+ });
+}
+document.getElementById('ecb-admin-filter').addEventListener('input',renderAdminPanel);
+document.getElementById('ecb-admin-export').addEventListener('click',()=>{
+ if(!window.ECB_ADMIN_ACCESS||!cloudProtocolsReady){toast('Bitte zuerst als Admin anmelden und bestätigte Cloud-Daten laden.');return;}
+ const backup={createdAt:new Date().toISOString(),project:'ecb-maintenance',protocols:history,dguv_devices:dguv.map(d=>({id:d.id,...d.raw}))};
+ const file=new Blob([JSON.stringify(backup,null,2)],{type:'application/json'}),url=URL.createObjectURL(file);
+ const a=document.createElement('a');a.href=url;a.download='ECB_Wartung_Gesamtsicherung_'+new Date().toISOString().slice(0,10)+'.json';document.body.append(a);a.click();a.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),1500);
+ toast('Gesamtsicherung heruntergeladen.');
+});
+document.getElementById('ecb-my-account').addEventListener('click',()=>goto('account'));
+document.getElementById('ecb-password-form').addEventListener('submit',async event=>{
+ event.preventDefault();
+ const button=document.getElementById('ecb-password-save'),feedback=document.getElementById('ecb-password-feedback');
+ const old=document.getElementById('ecb-password-old'),next=document.getElementById('ecb-password-new'),confirmNew=document.getElementById('ecb-password-confirm');
+ if(!window.ECB_CHANGE_MY_PASSWORD){feedback.textContent='Bitte zuerst anmelden.';return;}
+ if(next.value!==confirmNew.value){feedback.textContent='Die neuen Passwörter stimmen nicht überein.';return;}
+ if(next.value.length<10){feedback.textContent='Bitte mindestens 10 Zeichen verwenden.';return;}
+ if(next.value===old.value){feedback.textContent='Das neue Passwort muss anders sein.';return;}
+ button.disabled=true;feedback.style.color='';feedback.textContent='Passwort wird geändert …';
+ try{
+  await window.ECB_CHANGE_MY_PASSWORD(old.value,next.value);
+  old.value='';next.value='';confirmNew.value='';
+  feedback.style.color='#2c793c';feedback.textContent='✓ Passwort erfolgreich geändert. Es gilt ab der nächsten Anmeldung.';
+ }catch(e){
+  feedback.style.color='#ad3434';
+  feedback.textContent=['auth/wrong-password','auth/invalid-credential'].includes(e?.code)?'Bisheriges Passwort nicht korrekt.':
+   e?.code==='auth/weak-password'?'Neues Passwort ist zu schwach.':
+   e?.code==='auth/too-many-requests'?'Zu viele Versuche. Bitte später erneut versuchen.':
+   'Passwortänderung fehlgeschlagen: '+(e?.message||'Unbekannter Fehler');
+ }finally{old.value='';button.disabled=false;}
+});
+
 let toastTimer;function toast(s){clearTimeout(toastTimer);const box=document.getElementById('toast');box.textContent=s;box.classList.add('show');toastTimer=setTimeout(()=>box.classList.remove('show'),3500)};
 document.getElementById('auth-form').addEventListener('submit',async e=>{
  e.preventDefault();const b=document.getElementById('auth-submit');b.disabled=true;
@@ -510,7 +623,7 @@ renderHistory();renderDguv();renderCalendar();
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getFirestore,collection,onSnapshot,doc,setDoc,getDocFromServer} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore.js';
-import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
+import {getAuth,onAuthStateChanged,signInWithEmailAndPassword,signOut,EmailAuthProvider,reauthenticateWithCredential,updatePassword} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
 const config={apiKey:'AIzaSyDAYbTwQd8aDeTSHzuxWtEVon6SHIVRB5k',authDomain:'ecb-maintenance.firebaseapp.com',projectId:'ecb-maintenance',appId:'1:229926423123:web:a309c14c708fc886c62d4a6'};
 try {
  const app=initializeApp(config),auth=getAuth(app),db=getFirestore(app);
@@ -522,6 +635,8 @@ try {
  window.ECB_LOGOUT=async()=>signOut(auth);
  onAuthStateChanged(auth,user=>{
    teardown();
+   setAdminAccess(false);
+   window.ECB_CHANGE_MY_PASSWORD=null;
    if(!user){
      window.ECB_ACCEPT_SNAPSHOT([],true);window.ECB_ACCEPT_DGUV([],true);document.getElementById('report-content').innerHTML='';document.querySelector('[data-page="dashboard"]')?.click();
      document.getElementById('auth-panel').style.display='block';
@@ -535,6 +650,17 @@ try {
    }
    document.getElementById('auth-panel').style.display='none';
    document.getElementById('auth-identity').style.display='flex';
+   window.ECB_CHANGE_MY_PASSWORD=async(previous,next)=>{
+     const current=auth.currentUser;
+     if(!current?.email)throw Error('Bitte zuerst mit E-Mail und Passwort anmelden.');
+     await reauthenticateWithCredential(current,EmailAuthProvider.credential(current.email,previous));
+     await updatePassword(current,next);
+     return true;
+   };
+   user.getIdTokenResult().then(({claims})=>{
+     if(auth.currentUser?.uid!==user.uid)return;
+     setAdminAccess(claims.ecbAdmin===true||user.email?.toLowerCase()==='u628a9b8002418e770775778dae8759cac10cb8ab032ad589@accounts.ecb.invalid');
+   }).catch(()=>setAdminAccess(false));
    window.ECB_SAVE=async protocol=>{
      if(!navigator.onLine)throw Error('Offline: Speichern nicht möglich');
      const reference=doc(protocols),record={...protocol,id:reference.id};
