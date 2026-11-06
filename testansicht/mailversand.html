@@ -5,67 +5,153 @@
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>ECB Wartung – Mailversand prüfen</title>
 <style>
-:root{--deep:#27492d;--green:#4c852b;--line:#d9e2d6;--dim:#617266;--bg:#edf4e9;--red:#b32c29}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:system-ui,-apple-system,Segoe UI,sans-serif;color:#1c3024;background:var(--bg)}
-main{max-width:820px;margin:0 auto;padding:22px 14px 60px}
-header,.panel{background:#fff;border:1px solid var(--line);border-radius:22px;box-shadow:0 8px 26px #1e3e2020}
-header{display:flex;gap:20px;align-items:center;padding:22px;margin-bottom:15px}
-header img{width:86px;height:76px;object-fit:contain}
-h1{font-size:clamp(21px,5vw,30px);margin:0;color:var(--deep)}
-h2{font-size:19px;margin:0 0 9px}
-header p{margin:4px 0 0;color:var(--dim)}
-.panel{padding:25px;margin-bottom:15px}
-small, .muted{color:var(--dim);font-size:13px;line-height:1.55}
-.notice{background:#fff7e5;border:1px solid #e8d7aa;padding:13px 15px;border-radius:12px;margin-bottom:18px;font-size:13px}
-label{font-weight:650;display:block;margin:16px 0 7px}
-input,select{border:1px solid #cbd9c8;background:#fff;padding:14px;border-radius:12px;color:#17311d;width:100%;font:inherit}
-input:focus,select:focus{outline:2px solid #9bc48b}
-button{cursor:pointer;border:0;border-radius:12px;padding:14px 19px;background:var(--green);color:white;font-weight:700;font:inherit}
-button:disabled{opacity:.57;cursor:default}
-.button-light{background:#e7eee2;color:var(--deep)}
-.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
-.row button{flex:1;min-width:180px}
-.status{margin-top:16px;min-height:25px;font-size:14px;line-height:1.5;white-space:pre-wrap}
-.ok{color:#286d38}.err{color:var(--red)}
-.hidden{display:none!important}
-#count{color:var(--dim)}
-footer{text-align:center;color:#6c7f71;font-size:12px;padding:15px}
+:root{--ink:#20372b;--deep:#254735;--green:#467b52;--light:#ebf3e9;--line:#dce6dd;--muted:#667a6c;--red:#ac433e;--bg:#f2f6ef}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:ui-sans-serif,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;color:var(--ink)}
+body{background:radial-gradient(circle at 92% 0,#dcebd5,transparent 32rem),var(--bg)}
+main{width:min(100% - 28px,900px);margin:0 auto;padding:22px 0 60px}
+.hero{background:linear-gradient(135deg,#214634 0%,#386b46 65%,#478758 100%);color:#fff;border-radius:23px;padding:27px;display:flex;align-items:center;gap:22px;box-shadow:0 15px 35px #193b2630}
+.brand-img{width:97px;height:88px;object-fit:contain;background:#ffffff;border-radius:18px;padding:8px;flex-shrink:0}
+.kicker{text-transform:uppercase;letter-spacing:2px;font-weight:750;font-size:11px;opacity:.85}
+.hero h1{font-size:clamp(24px,5vw,34px);letter-spacing:-.8px;margin:7px 0}
+.hero p{font-size:14px;opacity:.9;margin:0;line-height:1.6}
+.hero-badge{margin-left:auto;white-space:nowrap;font-size:11px;border:1px solid #ffffff6b;border-radius:50px;padding:9px 12px;color:#fff}
+.notice{background:#e6efe6;color:#345842;border:1px solid #c9dfce;border-radius:15px;padding:13px 17px;margin:17px 0;line-height:1.55;font-size:13px}
+.panel{background:#fff;border:1px solid var(--line);border-radius:22px;padding:25px;margin-top:17px;box-shadow:0 8px 30px #1f3d2610}
+.panel-title{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:10px}
+h2{font-size:21px;letter-spacing:-.45px;margin:0}h3{font-size:15px;margin:0 0 15px}
+.muted,.help,small{color:var(--muted);font-size:13px;line-height:1.6}
+label{display:block;margin:15px 0 7px;font-size:13px;font-weight:700;color:#3c5543}
+input,select{border:1px solid #ccd9d0;background:#fff;border-radius:11px;padding:15px 13px;color:var(--ink);width:100%;font:inherit;font-size:15px;min-height:51px;outline-offset:2px}
+input:focus,select:focus{outline:2px solid #9ac5a3}
+button{cursor:pointer;border:none;border-radius:12px;padding:15px 18px;background:var(--green);color:#fff;font:inherit;font-weight:700;min-height:49px;transition:background .15s ease}
+button:hover{background:#396845}button:disabled{opacity:.55;cursor:not-allowed}
+.secondary{background:#eaf1e9;color:#2e593b}.secondary:hover{background:#dbe8da}
+.row{display:flex;gap:12px;flex-wrap:wrap;margin-top:16px}.row>*{flex:1;min-width:180px}
+.tag{background:#edf4ed;color:#3c6748;border-radius:40px;padding:7px 12px;font-size:12px;font-weight:750;white-space:nowrap}
+.status{margin:13px 0 0;white-space:pre-wrap;font-size:13px;line-height:1.6;min-height:1px;color:#5d7163}
+.ok{color:#27723f}.err{color:var(--red)}.hidden{display:none!important}
+.selection{padding-bottom:16px}
+.overview{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px;margin-top:18px}
+.meta{padding:14px 16px;background:#f6f9f5;border:1px solid #e7eee6;border-radius:13px;min-width:0}
+.meta .key{color:#738577;font-size:11px;font-weight:700;letter-spacing:.25px;margin-bottom:5px;text-transform:uppercase}
+.meta .value{color:#294832;font-size:15px;font-weight:750;overflow-wrap:anywhere}
+.document-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(220px,.8fr);gap:16px;margin-top:17px}
+.subcard{border:1px solid var(--line);border-radius:15px;padding:18px;background:#fff}
+.points{list-style:none;margin:0;padding:0;max-height:330px;overflow:auto}
+.points li{display:flex;align-items:start;justify-content:space-between;gap:12px;border-bottom:1px solid #edf0ec;padding:10px 0;font-size:13px;line-height:1.45}
+.points li:last-child{border:0}
+.points-name{min-width:0;overflow-wrap:anywhere}
+.point-status{border-radius:9px;background:#eef4ee;color:#4d7758;flex-shrink:0;font-weight:750;padding:4px 7px;font-size:11px;max-width:48%;text-align:center}
+.point-status.bad{background:#fff0ed;color:#a34c44}
+.check-item{display:flex;align-items:center;gap:11px;padding:12px 0;border-bottom:1px solid #edf0ec;font-size:13px}
+.check-item:last-child{border:0}.check-item strong{margin-left:auto;white-space:nowrap;color:#2f6841}
+.check-icon{display:grid;place-items:center;width:29px;height:29px;border-radius:50%;background:#e6f1e7;color:#468454;font-size:15px;font-weight:800}
+.remarks{margin-top:15px;font-size:13px;color:#576d5d;line-height:1.5}
+.recipient{display:flex;gap:10px;align-items:center;padding:12px 15px;background:#f4f8f3;border-radius:12px;margin-top:12px;font-size:13px;color:#526656}
+.recipient strong{color:#244833}
+.mail-preview{margin-top:20px;border:1px solid #dce5dc;border-radius:15px;overflow:hidden}
+.mail-head{background:#315b3e;color:white;padding:18px 20px}
+.mail-head .mini-brand{letter-spacing:2px;font-size:11px;font-weight:800;opacity:.8}
+.mail-head strong{display:block;margin-top:7px;font-size:19px}
+.mail-main{padding:20px;background:#fff}
+.mail-main p{line-height:1.6;font-size:13px;margin:0 0 13px}
+.mail-meta{background:#f5f8f3;border-radius:10px;padding:12px 15px;display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.mail-meta span{display:block;color:#768376;font-size:10px;text-transform:uppercase}
+.mail-meta b{display:block;margin-top:4px;color:#2c4735;font-size:13px;overflow-wrap:anywhere}
+.attachment{padding:13px;margin-top:14px;border:1px dashed #bad1bb;border-radius:11px;background:#f8fbf6;display:flex;align-items:center;gap:12px;font-size:12px}
+.attachment-symbol{display:grid;place-items:center;width:39px;height:44px;border-radius:8px;background:#e4eee4;color:#326943;font-weight:900}
+.attach-title{font-weight:800;color:#314d39;overflow-wrap:anywhere}.attachment small{display:block}
+.send-actions{margin-top:20px}
+#send-btn{background:#477f52}
+footer{text-align:center;color:#7d8e7f;font-size:12px;padding:25px 10px}
+dialog{border:0;border-radius:18px;padding:0;width:min(95vw,440px);max-height:90vh;box-shadow:0 25px 70px #142c1d70}
+dialog::backdrop{background:#132719a8;backdrop-filter:blur(3px)}
+.dialog-pad{padding:25px}.dialog-pad h2{font-size:22px}
+.confirm-detail{background:#f0f6ef;border-radius:11px;padding:14px;margin-top:15px;font-size:13px;line-height:1.7;overflow-wrap:anywhere}
+.advanced{margin-top:15px}.advanced summary{font-size:12px;color:#687b6e;cursor:pointer;display:inline-block}
+@media(max-width:640px){main{width:calc(100% - 24px);padding-top:12px}.hero{padding:21px;gap:14px}.hero-badge{display:none}.brand-img{width:68px;height:69px}.panel{padding:20px 17px}.document-grid{grid-template-columns:1fr}.overview{gap:9px}.meta{padding:12px}.mail-main{padding:15px}.row>*{flex-basis:100%}}
+
 </style>
 </head>
 <body>
+
 <main>
-<header>
-<img id="ecb-logo" alt="ECB Original-Logo">
-<div><h1>ECB Wartungssystem</h1><p>E.C.B. Reinigungssysteme GmbH</p><p><strong>Prüfung des kostenlosen E-Mail-Versands</strong></p></div>
+<header class="hero">
+ <img id="ecb-logo" class="brand-img" alt="ECB Original-Logo">
+ <div><div class="kicker">E.C.B. Reinigungssysteme GmbH</div><h1>Wartungsprotokolle</h1><p>Protokolle prüfen, als PDF herunterladen und sicher per E-Mail versenden.</p></div>
+ <span class="hero-badge">PDF &amp; E-Mail</span>
 </header>
-<div class="notice"><strong>Testansicht – keine Änderungen an Firebase.</strong> Es werden vorhandene Wartungsprotokolle nur gelesen. Es wird erst eine echte Test-E-Mail an <b>pb@ecb-system.de</b> gesendet, wenn du den Versand ausdrücklich bestätigst.</div>
+<div class="notice"><strong>Originaldokumente bleiben geschützt.</strong> Diese Ansicht liest die vorhandenen Wartungsprotokolle aus Firebase, ohne sie zu verändern. E-Mails werden nur nach deiner Bestätigung versendet.</div>
 <section id="login-panel" class="panel">
-<h2>Anmeldung</h2>
-<p class="muted">Verwende denselben Firebase-Benutzer wie in der bereits funktionierenden Wartungs-Testansicht.</p>
-<form id="login-form">
-<label for="username">Benutzername</label>
-<input id="username" autocomplete="username" placeholder="ECB_Wartung" required>
-<label for="password">Passwort</label>
-<input id="password" type="password" autocomplete="current-password" required>
-<div class="row"><button id="login-btn" type="submit">Mit Firebase anmelden</button></div>
-</form>
-<p id="login-status" class="status" role="status"></p>
+ <h2>Sicher anmelden</h2>
+ <p class="muted">Melde dich mit deinem bestehenden ECB-Wartungskennwort an.</p>
+ <form id="login-form">
+  <label for="password">Passwort</label>
+  <input id="password" type="password" autocomplete="current-password" placeholder="Passwort eingeben" required>
+  <details class="advanced"><summary>Anderes Benutzerkonto verwenden</summary>
+    <label for="other-username">Benutzerkonto</label>
+    <input id="other-username" autocomplete="username" placeholder="Benutzerkonto">
+  </details>
+  <div class="row"><button id="login-btn" type="submit">Anmelden</button></div>
+ </form>
+ <p id="login-status" class="status" role="status" aria-live="polite"></p>
 </section>
 <section id="list-panel" class="panel hidden">
-<h2>Gespeicherte Wartungsprotokolle</h2>
-<p class="muted">Es werden ausschließlich direkt gespeicherte Originaldokumente geladen. Fehlende Fotos oder Unterschriften verhindern den Versand.</p>
-<label for="report">Protokoll wählen <span id="count"></span></label>
-<select id="report"></select>
-<div id="details" class="muted" style="margin-top:14px"></div>
-<div class="row">
-<button type="button" class="button-light" id="preview-btn">PDF herunterladen</button>
-<button type="button" id="send-btn">Test-E-Mail an pb@ecb-system.de senden</button>
-</div>
-<p id="mail-status" class="status" role="status"></p>
-<p class="muted">Absender: <b>ECB Wartung &lt;wartung@bgf-elektro.com&gt;</b>. Der Versand wird gegen die bereits gespeicherte Firebase-Datei geprüft; der Inhalt wird nicht verändert.</p>
+ <div class="panel-title"><h2>Protokoll auswählen</h2><span class="tag" id="count">0 Protokolle</span></div>
+ <p class="muted">Wähle das Originalprotokoll aus. Alle Informationen werden automatisch aus dem gespeicherten Dokument übernommen.</p>
+ <label for="report">Gespeicherte Wartungsprotokolle</label>
+ <select id="report" aria-label="Wartungsprotokoll wählen"></select>
+ <div class="overview" id="overview">
+  <div class="meta"><div class="key">Protokollnummer</div><div class="value" id="meta-id">–</div></div>
+  <div class="meta"><div class="key">Maschine / Anlage</div><div class="value" id="meta-machine">–</div></div>
+  <div class="meta"><div class="key">Datum</div><div class="value" id="meta-date">–</div></div>
+  <div class="meta"><div class="key">Bearbeitet von</div><div class="value" id="meta-technician">–</div></div>
+ </div>
+ <div class="document-grid">
+  <section class="subcard"><h3>Prüfpunkte</h3><ul class="points" id="point-list"></ul></section>
+  <section class="subcard"><h3>Dokumenten-Check</h3>
+   <div class="check-item"><span class="check-icon">✓</span> Prüfpunkte <strong id="check-points">–</strong></div>
+   <div class="check-item"><span class="check-icon">✓</span> Originalfotos <strong id="check-photos">–</strong></div>
+   <div class="check-item"><span class="check-icon">✓</span> Unterschrift <strong id="check-signature">–</strong></div>
+   <div class="remarks" id="remarks"></div>
+  </section>
+ </div>
 </section>
-<footer>ECB Wartung – gesonderter PDF-/Mail-Funktionstest · keine Firebase-Schreibvorgänge</footer>
+<section id="compose-panel" class="panel hidden">
+ <div class="panel-title"><h2>E-Mail vorbereiten</h2><span class="tag">Mit PDF-Anhang</span></div>
+ <p class="muted">Bitte Empfänger und Protokoll kontrollieren. Das PDF enthält die gespeicherten Prüfpunkte, Originalfotos und Unterschrift.</p>
+ <label for="email-to">Empfängeradresse</label>
+ <input id="email-to" type="email" inputmode="email" autocomplete="email" value="pb@ecb-system.de" placeholder="name@firma.de" required>
+ <div class="recipient"><strong>Absender</strong> <span>ECB Wartung &lt;wartung@bgf-elektro.com&gt;</span></div>
+ <div class="mail-preview" role="region" aria-label="Vorschau der E-Mail">
+  <div class="mail-head"><div class="mini-brand">ECB WARTUNGSSYSTEM</div><strong>Wartungsprotokoll</strong></div>
+  <div class="mail-main">
+   <p>Guten Tag,<br>anbei erhalten Sie das abgeschlossene Wartungsprotokoll als PDF mit allen dokumentierten Prüfpunkten, Fotos und der Unterschrift.</p>
+   <div class="mail-meta">
+    <div><span>Protokoll-Nr.</span><b id="mail-id">–</b></div>
+    <div><span>Maschine / Anlage</span><b id="mail-machine">–</b></div>
+    <div><span>Wartungsdatum</span><b id="mail-date">–</b></div>
+    <div><span>Prüfpunkte</span><b id="mail-points">–</b></div>
+   </div>
+   <div class="attachment"><div class="attachment-symbol">PDF</div><div><div class="attach-title" id="attachment-name">ECB_Protokoll.pdf</div><small>Originaldokument · mit Fotos und Unterschrift</small></div></div>
+  </div>
+ </div>
+ <div class="row send-actions">
+  <button id="preview-btn" type="button" class="secondary">PDF herunterladen</button>
+  <button id="send-btn" type="button">Protokoll per E-Mail senden</button>
+ </div>
+ <p id="mail-status" class="status" role="status" aria-live="polite"></p>
+ <p class="help">Jeder Versand wird einmalig angefordert. Bei einem unbestätigten Versand wird ein versehentliches erneutes Senden verhindert.</p>
+</section>
+<footer>ECB Wartungssystem · Sicherer Protokollversand · Keine Firebase-Schreibvorgänge</footer>
 </main>
+<dialog id="send-dialog" aria-labelledby="confirm-title">
+ <div class="dialog-pad"><h2 id="confirm-title">E-Mail jetzt versenden?</h2>
+ <p class="muted">Bitte überprüfe die Angaben. Anschließend wird das vollständige Original-PDF als Anhang verschickt.</p>
+ <div id="confirm-details" class="confirm-detail"></div>
+ <div class="row"><button type="button" id="cancel-send" class="secondary">Abbrechen</button><button type="button" id="confirm-send">Jetzt senden</button></div>
+ </div>
+</dialog>
 <script type="module">
 import {initializeApp} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-app.js';
 import {getAuth,signInWithEmailAndPassword,setPersistence,browserSessionPersistence} from 'https://www.gstatic.com/firebasejs/10.14.1/firebase-auth.js';
@@ -79,7 +165,7 @@ const app=initializeApp({
  appId:'1:229926423123:web:a309c14c708fc886c62d4a6'
 },'ecb-mail-test');
 const auth=getAuth(app),db=getFirestore(app);
-let protocols=[],sentAttempted=false,sending=false,logoData='';
+let protocols=[],attemptedKeys=new Set(),sending=false,logoData='';
 const msg=(id,content,good)=>{const el=$(id);el.textContent=String(content||'');el.className='status '+(good===true?'ok':good===false?'err':'');};
 
 const pdfSources=[
@@ -162,8 +248,8 @@ async function listProtocols(){
   option.textContent=p.id+' · '+String(p.machine||p.category||'Wartung')+' · '+String(p.date||'');
   select.appendChild(option);
  }
- $('count').textContent='('+protocols.length+' geladen)';
- $('list-panel').classList.remove('hidden');
+ $('count').textContent=protocols.length+' geladen';
+ $('list-panel').classList.remove('hidden');$('compose-panel').classList.remove('hidden');
  $('login-panel').classList.add('hidden');
  if(!protocols.length){
   $('send-btn').disabled=true;$('preview-btn').disabled=true;
@@ -173,21 +259,58 @@ async function listProtocols(){
  }else msg('mail-status','Firebase hat die vorhandenen Protokolle bestätigt. Bitte zunächst ein älteres Protokoll auswählen.',true);
  showSelected();
 }
+
 function selected(){return protocols.find(p=>p.__path===$('report').value)}
+function sendKey(p){return (p?.__path||'')+'|'+$('email-to').value.trim().toLowerCase()}
+function setValue(id,value){$(id).textContent=String(value??'–')||'–'}
+function formatDate(value){
+ if(!value)return '–';
+ const str=String(value);
+ if(/^\d{4}-\d{2}-\d{2}$/.test(str)){const [y,m,d]=str.split('-');return d+'.'+m+'.'+y;}
+ const d=new Date(str);return Number.isNaN(d.getTime())?str:d.toLocaleDateString('de-DE');
+}
+function pointTitle(item){return String(item?.title||item?.name||item?.label||'Prüfpunkt')}
 function showSelected(){
- const p=selected();if(!p)return;
- const fotos=Array.isArray(p.photos)?p.photos.length:0,signature=Boolean(imgData(p.signature)),points=Array.isArray(p.points)?p.points.length:0;
- $('details').textContent='Prüfpunkte: '+points+' | Originalfotos: '+fotos+' | Unterschrift: '+(signature?'vorhanden':'fehlt');
- $('send-btn').disabled=sentAttempted||sending||!signature;
- $('preview-btn').disabled=sending||!signature;
+ const p=selected();
+ if(!p){$('send-btn').disabled=true;$('preview-btn').disabled=true;return;}
+ const pts=Array.isArray(p.points)?p.points:[];
+ const fotos=Array.isArray(p.photos)?p.photos.length:0;
+ const signed=Boolean(imgData(p.signature));
+ setValue('meta-id',p.id);setValue('meta-machine',p.machine||p.category||'Wartung');
+ setValue('meta-date',formatDate(p.date||p.timestamp));setValue('meta-technician',p.employee||p.technician||'–');
+ setValue('check-points',pts.length+' dokumentiert');
+ setValue('check-photos',fotos+' vorhanden');
+ setValue('check-signature',signed?'Vorhanden':'Fehlt');
+ setValue('mail-id',p.id);setValue('mail-machine',p.machine||p.category||'Wartung');
+ setValue('mail-date',formatDate(p.date||p.timestamp));setValue('mail-points',pts.length+' Prüfpositionen');
+ setValue('attachment-name','ECB_Protokoll_'+String(p.id).replace(/[^A-Za-z0-9-_]/g,'_')+'.pdf');
+ const remarks=String(p.remarks||p.notes||'').trim();
+ setValue('remarks',remarks?'Bemerkung: '+remarks:'');
+ const list=$('point-list');list.textContent='';
+ if(!pts.length){const li=document.createElement('li');li.textContent='Keine Prüfpunkte hinterlegt';list.appendChild(li);}
+ pts.forEach((point,index)=>{
+  const li=document.createElement('li'),name=document.createElement('span'),status=document.createElement('span');
+  name.className='points-name';name.textContent=(index+1)+'. '+pointTitle(point);
+  const value=String(point?.status||point?.result||'Dokumentiert');
+  status.textContent=value;status.className='point-status';
+  if(/mangel|defekt|offen|fehler|nicht ok|fail|nein|nicht bestanden/i.test(value))status.classList.add('bad');
+  li.append(name,status);list.appendChild(li);
+ });
+ const complete=signed&&Array.isArray(p.points)&&Array.isArray(p.photos)&&Boolean(p.machine||p.category);
+ $('send-btn').disabled=sending||!complete||attemptedKeys.has(sendKey(p));
+ $('preview-btn').disabled=sending||!complete;
 }
 $('report').addEventListener('change',()=>{showSelected();msg('mail-status','',null)});
+$('email-to').addEventListener('input',showSelected);
+$('cancel-send').addEventListener('click',()=>$('send-dialog').close());
+$('send-dialog').addEventListener('cancel',()=>{});
 $('login-form').addEventListener('submit',async e=>{
  e.preventDefault();
  const btn=$('login-btn');btn.disabled=true;msg('login-status','Firebase-Anmeldung wird geprüft …');
  try{
   await setPersistence(auth,browserSessionPersistence);
-  const user=await signInWithEmailAndPassword(auth,await alias($('username').value),$('password').value);
+  const username=$('other-username').value.trim()||'ECB_Wartung';
+  const user=await signInWithEmailAndPassword(auth,await alias(username),$('password').value);
   if(!user.user)throw Error('Benutzer nicht bestätigt.');
   $('password').value='';msg('login-status','Anmeldung erfolgreich. Originalprotokolle werden geladen …',true);
   await listProtocols();
@@ -268,37 +391,50 @@ $('preview-btn').addEventListener('click',async()=>{
  }catch(e){msg('mail-status',e.message||String(e),false);}
  finally{showSelected();}
 });
-$('send-btn').addEventListener('click',async()=>{
- const p=selected();if(!p||sentAttempted||sending)return;
- if(!confirm('Test-E-Mail mit PDF von '+p.id+' wirklich an pb@ecb-system.de senden?'))return;
+
+async function performSend(p,to){
+ if(!p||sending||attemptedKeys.has(sendKey(p)))return;
  sending=true;showSelected();
  let requestStarted=false;
+ const key=sendKey(p);
  try{
-  msg('mail-status','Original-PDF wird erstellt und geprüft …');
+  msg('mail-status','Original-PDF mit Bildern und Unterschrift wird erstellt …');
   const {b64}=await pdfFor(p);
   const user=auth.currentUser;if(!user)throw Error('Firebase-Sitzung abgelaufen. Seite neu laden.');
   const token=await user.getIdToken(true);
   const requestId=crypto.randomUUID();
-  // Erst ab hier kann eine Mail ausgelöst werden. Danach verhindert die Sperre Doppelversand.
-  sentAttempted=true;
+  attemptedKeys.add(key);
   requestStarted=true;
-  msg('mail-status','PDF erstellt. E-Mail wird einmalig angefordert …');
+  msg('mail-status','Das PDF ist fertig. Die E-Mail wird jetzt einmalig angefordert …');
   const response=await fetch(worker,{method:'POST',headers:{
    'Authorization':'Bearer '+token,'Content-Type':'application/json'
   },body:JSON.stringify({mode:'manual',protocolId:p.id,sourcePath:p.__path,
-   recipient:'pb@ecb-system.de',requestId,pdfBase64:b64})});
+   recipient:to,requestId,pdfBase64:b64})});
   const result=await response.json().catch(()=>({}));
   if(!response.ok||!result.ok)throw Error(result.error||'Cloudflare hat die E-Mail nicht bestätigt (HTTP '+response.status+').');
-  msg('mail-status','Resend hat den Auftrag bestätigt. Protokoll '+p.id+' wurde einmalig an pb@ecb-system.de gesendet. Versand-ID: '+result.jobId,true);
+  msg('mail-status','E-Mail erfolgreich angefordert: '+p.id+' an '+to+'. Versand-ID: '+result.jobId,true);
  }catch(e){
   const reason=e.message||String(e);
   msg('mail-status',requestStarted
    ?'Versand nicht bestätigt: '+reason+'. Bitte nicht erneut senden, bevor der Status geprüft wurde.'
-   :'Noch keine E-Mail verschickt: '+reason+'. Du kannst den Versand erneut versuchen.',false);
- }finally{
-  sending=false;
-  showSelected();
- }
+   :'Noch keine E-Mail verschickt: '+reason+'. Du kannst es erneut versuchen.',false);
+ }finally{sending=false;showSelected();}
+}
+$('send-btn').addEventListener('click',()=>{
+ const p=selected(),to=$('email-to').value.trim().toLowerCase();
+ if(!p||sending)return;
+ if(!$('email-to').checkValidity()||!to){msg('mail-status','Bitte eine gültige E-Mail-Adresse eingeben.',false);$('email-to').focus();return;}
+ if(attemptedKeys.has(sendKey(p))){msg('mail-status','Dieser Versand wurde bereits angefordert. Bitte keinen Doppelversand auslösen.',false);return;}
+ const preview='Protokoll: '+p.id+'\nMaschine: '+String(p.machine||p.category||'Wartung')+'\nEmpfänger: '+to;
+ $('confirm-details').textContent=preview;
+ if(typeof $('send-dialog').showModal==='function')$('send-dialog').showModal();
+ else if(confirm('PDF mit Originaldaten versenden?\n'+preview))performSend(p,to);
+});
+$('confirm-send').addEventListener('click',()=>{
+ const p=selected(),to=$('email-to').value.trim().toLowerCase();
+ $('send-dialog').close();
+ if(!p||!$('email-to').checkValidity()||attemptedKeys.has(sendKey(p)))return;
+ performSend(p,to);
 });
 </script>
 </body></html>
